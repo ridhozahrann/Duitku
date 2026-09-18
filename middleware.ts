@@ -46,7 +46,9 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password'
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password'
+  // ponytail: /reset-password boleh diakses saat recovery session (user ada tapi lagi reset), jangan redirect ke /
+  // upgrade: cek ?type=recovery kalau mau ketat
 
   if (!user && !isPublic) {
     const loginUrl = new URL('/login', request.url)

@@ -18,17 +18,11 @@ export default function ForgotPasswordPage() {
     setErr(''); setMsg(''); setLoading(true)
     const supabase = createClient()
     if (!supabase) { setErr('Supabase belum dikonfigurasi.'); setLoading(false); return }
-    // ponytail: coba pakai redirectTo ke /auth/callback; fallback tanpa redirectTo bila belum di-whitelist
     const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`
-    let { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
-    if (error && /redirect|path|whitelist/i.test(error.message)) {
-      const res2 = await supabase.auth.resetPasswordForEmail(email)
-      error = res2.error
-      if (!error) setMsg('Link reset terkirim (tanpa redirect custom). Cek inbox/spam. Jika link tidak balik ke aplikasi, whitelist di Supabase: Dashboard > Authentication > URL Configuration > Additional Redirect URLs = ' + redirectTo)
-    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
     setLoading(false)
     if (error) { setErr(error.message); return }
-    if (!msg) setMsg('Link reset terkirim. Cek inbox/spam. Klik link di email untuk atur password baru.')
+    setMsg('Link reset terkirim. Cek inbox/spam. Klik link di email untuk atur password baru.')
   }
 
   return (
