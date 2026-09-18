@@ -122,11 +122,22 @@ export default function DesktopSidebar() {
         {/* Account */}
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           {collapsed ? (
-            <button onClick={signOut} className="w-full flex justify-center p-2 text-gray-500 hover:text-red-600" title="Keluar"><LogOut className="h-5 w-5" /></button>
+            user ? (
+              <button onClick={signOut} className="w-full flex justify-center p-2 text-gray-500 hover:text-red-600" title={user.email ?? 'Keluar'}><LogOut className="h-5 w-5" /></button>
+            ) : (
+              <Link href="/login" className="w-full flex justify-center p-2 text-primary-600" title="Masuk"><LogOut className="h-5 w-5 rotate-180" /></Link>
+            )
+          ) : user ? (
+            <div className="space-y-2">
+              <div className="text-xs text-gray-500 truncate">{user.email}</div>
+              <button onClick={signOut} className="w-full flex items-center gap-2 text-sm text-gray-600 hover:text-red-600"><LogOut className="h-4 w-4" />Keluar</button>
+            </div>
           ) : (
             <div className="space-y-2">
-              <div className="text-xs text-gray-500 truncate">{user ? user.email : 'Mode offline (local)'}</div>
-              <button onClick={signOut} className="w-full flex items-center gap-2 text-sm text-gray-600 hover:text-red-600"><LogOut className="h-4 w-4" />Keluar</button>
+              <div className="text-xs text-amber-600">Belum login</div>
+              <Link href="/login" className="block w-full text-center bg-primary-600 text-white py-2 rounded-lg text-sm font-medium">Masuk</Link>
+              <Link href="/register" className="block w-full text-center border py-2 rounded-lg text-sm">Daftar</Link>
+              <p className="text-[10px] text-gray-400">Set env Supabase di Vercel biar cloud aktif. Lokal tetap jalan offline.</p>
             </div>
           )}
         </div>
