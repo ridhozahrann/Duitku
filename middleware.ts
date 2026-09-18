@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const PUBLIC_PATHS = ['/login', '/register', '/auth']
+const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/auth']
 const PUBLIC_EXACT = ['/manifest.json', '/sw.js', '/icon.svg']
 
 export async function middleware(request: NextRequest) {
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
-  const isAuthPage = pathname === '/login' || pathname === '/register'
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password'
 
   if (!user && !isPublic) {
     const loginUrl = new URL('/login', request.url)

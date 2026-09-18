@@ -33,6 +33,7 @@ function LoginForm() {
       <div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" type="password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
       {err && <p className="text-sm text-red-600">{err}</p>}
       <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Memproses...' : 'Masuk'}</Button>
+      <p className="text-sm text-center"><Link href="/forgot-password" className="text-gray-500 hover:text-primary-600 hover:underline">Lupa password?</Link></p>
       <p className="text-sm text-center text-gray-500">Belum punya akun? <Link href="/register" className="text-primary-600 hover:underline">Daftar</Link></p>
       <p className="text-xs text-gray-400 text-center">Tanpa env Supabase, app tetap jalan localStorage-only.</p>
     </form>
