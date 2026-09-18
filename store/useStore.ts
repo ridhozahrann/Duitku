@@ -1,7 +1,6 @@
 'use client'
 
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
 import { Transaction, Category, Wallet, Bill, Habit, HabitLog, Budget, SavingsGoal } from '@/types'
 import { defaultCategories } from '@/lib/defaultData'
 import { createClient } from '@/lib/supabase/client'
@@ -60,8 +59,13 @@ const initialWallets: Wallet[] = [
   { id: 'default', name: 'Dompet Utama', description: 'Saldo utama', balance: 0, icon: 'wallet', color: 'blue', createdAt: new Date('2026-01-01'), updatedAt: new Date('2026-01-01') },
 ]
 
-// ponytail: cloud sync is best-effort, optimistic local-first; offline queue not persisted
-// upgrade: Workbox background sync + outbox table when offline reliability needed
+// cloud-only: hapus localStorage legacy biar tidak bentrok HP vs PC
+if (typeof window !== 'undefined') {
+  try { localStorage.removeItem('duit-mahasiswa-storage') } catch {}
+}
+
+// ponytail: cloud-only, tanpa persist localStorage
+// upgrade: tambah persist + sync queue jika butuh offline
 async function getCloud() {
   try {
     const supabase = createClient()
@@ -84,9 +88,7 @@ function cloudInsertHabitLog(habitId: string, date: string) {
   void getCloud().then(c => { if (!c) return; c.supabase.from('habit_logs').insert({ habit_id: habitId, user_id: c.userId, date }).then(()=>{} ) })
 }
 
-export const useStore = create<Store>()(
-  persist(
-    (set, get) => ({
+export const useStore = create<Store>()((set, get) => ({
       transactions: [],
       categories: defaultCategories,
       wallets: initialWallets,
@@ -110,7 +112,6 @@ export const useStore = create<Store>()(
           transactions: [newTransaction, ...state.transactions],
           wallets: state.wallets.map((w) => w.id === wid ? { ...w, balance: w.balance + (transaction.type === 'income' ? transaction.amount : -transaction.amount), updatedAt: now } : w),
         }))
-        // cloud: tx + wallet balance
         void getCloud().then(c => {
           if (!c) return
           c.supabase.from('transactions').insert(txToRow(newTransaction, c.userId)).then(()=>{})
@@ -146,7 +147,6 @@ export const useStore = create<Store>()(
           if(!c) return
           const cur = get().transactions.find(t=>t.id===id)
           if(cur) c.supabase.from('transactions').upsert(txToRow(cur, c.userId)).then(()=>{})
-          // sync affected wallets
           const wallets = get().wallets
           wallets.forEach(w=> c.supabase.from('wallets').upsert(walletToRow(w, c.userId)).then(()=>{}))
         })
@@ -261,41 +261,21 @@ export const useStore = create<Store>()(
         })
       },
       mergeCloud: (data) => {
-        // ponytail: merge tanpa tombstone, delete tidak propagate antar device
-        // upgrade: simpan deletedIds + sync outbox ketika butuh delete sync
+        // cloud-only: merge = hydrate (akun jadi sumber tunggal)
         const reviveTx = (t: Transaction) => ({ ...t, date: toDate(t.date), createdAt: toDate(t.createdAt), updatedAt: toDate(t.updatedAt) })
         const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
         const reviveWallet = (w: Wallet) => ({ ...w, createdAt: toDate(w.createdAt), updatedAt: toDate(w.updatedAt) })
         const reviveHabit = (h: Habit) => ({ ...h, createdAt: toDate(h.createdAt) })
         const reviveGoal = (g: SavingsGoal) => ({ ...g, deadline: g.deadline ? toDate(g.deadline) : undefined, createdAt: toDate(g.createdAt) })
-        const toMs = (d: unknown) => { try { const v = d instanceof Date ? d : new Date(d as string); return isNaN(v.getTime()) ? 0 : v.getTime() } catch { return 0 } }
-        const pickNewer = (a: any, b: any) => toMs(b.updatedAt ?? b.createdAt) >= toMs(a.updatedAt ?? a.createdAt) ? b : a
-        const s = get()
-        const cloudTx = data.transactions.map(reviveTx)
-        const cloudWallets = data.wallets.map(reviveWallet)
-        const cloudBills = data.bills.map(reviveBill)
-        const cloudHabits = data.habits.map(reviveHabit)
-        const cloudGoals = data.goals.map(reviveGoal)
-        const mergeById = <T extends { id: string }>(local: T[], cloud: T[], pick:(a:T,b:T)=>T) => {
-          const m = new Map(local.map(x=>[x.id, x] as const))
-          for (const c of cloud) { const l=m.get(c.id); m.set(c.id, l ? pick(l,c) : c) }
-          return Array.from(m.values())
-        }
-        const mergedTx = mergeById(s.transactions, cloudTx, pickNewer)
-        const mergedWallets = (()=>{ const m=mergeById(s.wallets, cloudWallets, pickNewer); return m.length ? m : initialWallets })()
-        const mergedBills = mergeById(s.bills, cloudBills, pickNewer)
-        const mergedHabits = mergeById(s.habits, cloudHabits, pickNewer)
-        const mergedGoals = mergeById(s.goals, cloudGoals, pickNewer)
-        // habitLogs union by habitId|date
-        const logKey = (l: HabitLog)=>`${l.habitId}|${l.date}`
-        const logMap = new Map(s.habitLogs.map(l=>[logKey(l), l] as const))
-        for (const l of data.habitLogs) if(!logMap.has(logKey(l))) logMap.set(logKey(l), l)
-        const mergedLogs = Array.from(logMap.values())
-        // budgets: union by id then dedupe by categoryId (cloud wins on conflict)
-        const budgetByCat = new Map<string, Budget>()
-        for (const b of [...s.budgets, ...data.budgets]) budgetByCat.set(b.categoryId, b)
-        const mergedBudgets = Array.from(budgetByCat.values())
-        set({ transactions: mergedTx, wallets: mergedWallets, bills: mergedBills, habits: mergedHabits, habitLogs: mergedLogs, budgets: mergedBudgets, goals: mergedGoals })
+        set({
+          transactions: data.transactions.map(reviveTx),
+          wallets: data.wallets.length ? data.wallets.map(reviveWallet) : initialWallets,
+          bills: data.bills.map(reviveBill),
+          habits: data.habits.map(reviveHabit),
+          habitLogs: data.habitLogs,
+          budgets: data.budgets,
+          goals: data.goals.map(reviveGoal),
+        })
       },
       clearAll: () => set({ transactions: [], bills: [], wallets: initialWallets, habitLogs: [], budgets: [], goals: [] }),
 
@@ -317,11 +297,4 @@ export const useStore = create<Store>()(
       getTransactionsByCategory: (categoryId) => get().transactions.filter((t) => t.categoryId === categoryId),
       setLoading: (loading) => { set({ isLoading: loading }) },
       setSyncing: (v) => set({ isSyncing: v }),
-    }),
-    {
-      name: 'duit-mahasiswa-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ transactions: state.transactions, categories: state.categories, wallets: state.wallets, bills: state.bills, habits: state.habits, habitLogs: state.habitLogs, budgets: state.budgets, goals: state.goals }),
-    }
-  )
-)
+    }))
