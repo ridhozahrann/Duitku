@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .dark .bg-white { background-color: rgb(39 39 42) !important; }
+  .dark .bg-gray-50 { background-color: rgb(39 39 42) !important; }
+  .dark .bg-gray-100 { background-color: rgb(63 63 70) !important; }
+  .dark .border-gray-200 { border-color: rgb(63 63 70) !important; }
+  .dark .border-gray-300 { border-color: rgb(82 82 91) !important; }
+  .dark .text-gray-900 { color: rgb(244 244 245) !important; }
+  .dark .text-gray-800 { color: rgb(228 228 231) !important; }
+  .dark .text-gray-700 { color: rgb(212 212 216) !important; }
+  .dark .text-gray-600 { color: rgb(161 161 170) !important; }
+  .dark .text-gray-500 { color: rgb(161 161 170) !important; }
+  .dark .text-gray-400 { color: rgb(113 113 122) !important; }
+  .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgb(63 63 70) !important; }
+  .dark [data-radix-popper-content-wrapper] { color: rgb(244 244 245) !important; }
+  .dark input, .dark textarea, .dark select { background-color: rgb(39 39 42) !important; color: rgb(244 244 245) !important; border-color: rgb(63 63 70) !important; }
+  .dark .placeholder\:text-gray-500::placeholder { color: rgb(113 113 122) !important; }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% fourth;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased dark:bg-zinc-900 dark:text-zinc-100;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* dark base overrides — ponytail: full dark theme later, for now minimal high-contrast fixes */
+  .dark {
+    color-scheme: dark;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-gray-700 px-4 py-2 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 transition-colors active:scale-95;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-4;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; }
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 640px) {
+    .mobile-tap-target {
+      @apply min-h-[44px];
+    }
+  }
+}

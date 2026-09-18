@@ -1,0 +1,21 @@
+# next
+.next/
+out/
+.vercel
+
+# deps
+node_modules/
+
+# build info
+tsconfig.tsbuildinfo
+
+# env
+.env
+.env.local
+
+# os
+.DS_Store
+Thumbs.db
+
+# vercel
+.vercel
