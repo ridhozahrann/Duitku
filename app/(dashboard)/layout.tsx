@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main content */}
       <main className="md:ml-64 h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          {isSyncing && <div className="py-2 text-xs text-center text-gray-400">Sinkron ke Supabase...</div>}
+          {isSyncing && <div className="py-2 text-xs text-center text-gray-400">Menyinkronkan data...</div>}
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>

@@ -40,6 +40,7 @@ interface Store {
   deleteGoal: (id: string) => void
   restoreData: (data: { transactions?: Transaction[]; wallets?: Wallet[]; bills?: Bill[]; categories?: Category[]; habits?: Habit[]; habitLogs?: HabitLog[]; budgets?: Budget[]; goals?: SavingsGoal[] }) => void
   hydrateCloud: (data: { transactions: Transaction[]; wallets: Wallet[]; bills: Bill[]; habits: Habit[]; habitLogs: HabitLog[]; budgets: Budget[]; goals: SavingsGoal[] }) => void
+  mergeCloud: (data: { transactions: Transaction[]; wallets: Wallet[]; bills: Bill[]; habits: Habit[]; habitLogs: HabitLog[]; budgets: Budget[]; goals: SavingsGoal[] }) => void
   clearAll: () => void
   getBalance: () => number
   getMonthlyIncome: () => number
@@ -258,6 +259,43 @@ export const useStore = create<Store>()(
           budgets: data.budgets,
           goals: data.goals.map(reviveGoal),
         })
+      },
+      mergeCloud: (data) => {
+        // ponytail: merge tanpa tombstone, delete tidak propagate antar device
+        // upgrade: simpan deletedIds + sync outbox ketika butuh delete sync
+        const reviveTx = (t: Transaction) => ({ ...t, date: toDate(t.date), createdAt: toDate(t.createdAt), updatedAt: toDate(t.updatedAt) })
+        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
+        const reviveWallet = (w: Wallet) => ({ ...w, createdAt: toDate(w.createdAt), updatedAt: toDate(w.updatedAt) })
+        const reviveHabit = (h: Habit) => ({ ...h, createdAt: toDate(h.createdAt) })
+        const reviveGoal = (g: SavingsGoal) => ({ ...g, deadline: g.deadline ? toDate(g.deadline) : undefined, createdAt: toDate(g.createdAt) })
+        const toMs = (d: unknown) => { try { const v = d instanceof Date ? d : new Date(d as string); return isNaN(v.getTime()) ? 0 : v.getTime() } catch { return 0 } }
+        const pickNewer = (a: any, b: any) => toMs(b.updatedAt ?? b.createdAt) >= toMs(a.updatedAt ?? a.createdAt) ? b : a
+        const s = get()
+        const cloudTx = data.transactions.map(reviveTx)
+        const cloudWallets = data.wallets.map(reviveWallet)
+        const cloudBills = data.bills.map(reviveBill)
+        const cloudHabits = data.habits.map(reviveHabit)
+        const cloudGoals = data.goals.map(reviveGoal)
+        const mergeById = <T extends { id: string }>(local: T[], cloud: T[], pick:(a:T,b:T)=>T) => {
+          const m = new Map(local.map(x=>[x.id, x] as const))
+          for (const c of cloud) { const l=m.get(c.id); m.set(c.id, l ? pick(l,c) : c) }
+          return Array.from(m.values())
+        }
+        const mergedTx = mergeById(s.transactions, cloudTx, pickNewer)
+        const mergedWallets = (()=>{ const m=mergeById(s.wallets, cloudWallets, pickNewer); return m.length ? m : initialWallets })()
+        const mergedBills = mergeById(s.bills, cloudBills, pickNewer)
+        const mergedHabits = mergeById(s.habits, cloudHabits, pickNewer)
+        const mergedGoals = mergeById(s.goals, cloudGoals, pickNewer)
+        // habitLogs union by habitId|date
+        const logKey = (l: HabitLog)=>`${l.habitId}|${l.date}`
+        const logMap = new Map(s.habitLogs.map(l=>[logKey(l), l] as const))
+        for (const l of data.habitLogs) if(!logMap.has(logKey(l))) logMap.set(logKey(l), l)
+        const mergedLogs = Array.from(logMap.values())
+        // budgets: union by id then dedupe by categoryId (cloud wins on conflict)
+        const budgetByCat = new Map<string, Budget>()
+        for (const b of [...s.budgets, ...data.budgets]) budgetByCat.set(b.categoryId, b)
+        const mergedBudgets = Array.from(budgetByCat.values())
+        set({ transactions: mergedTx, wallets: mergedWallets, bills: mergedBills, habits: mergedHabits, habitLogs: mergedLogs, budgets: mergedBudgets, goals: mergedGoals })
       },
       clearAll: () => set({ transactions: [], bills: [], wallets: initialWallets, habitLogs: [], budgets: [], goals: [] }),
 

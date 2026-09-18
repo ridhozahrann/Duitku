@@ -1,7 +1,7 @@
 {
   "name": "Duit Mahasiswa",
   "short_name": "Duitku",
-  "description": "Tracker keuangan mahasiswa — Supabase cloud sync",
+  "description": "Catat keuangan harian mahasiswa — sinkron otomatis HP & PC",
   "start_url": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "browser"],

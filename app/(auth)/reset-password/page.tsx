@@ -18,7 +18,7 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    if (!supabase) { setErr('Supabase belum dikonfigurasi.'); return }
+    if (!supabase) { setErr('Layanan belum siap. Coba lagi nanti.'); return }
     // verify recovery session exists (link sudah di-exchange oleh /auth/callback atau implicit)
     supabase.auth.getUser().then(({ data:{ user }, error }: any) => {
       if (error || !user) setErr('Link tidak valid/expired. Minta link baru di Lupa password.')
@@ -30,7 +30,7 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setErr(''); setMsg(''); setLoading(true)
     const supabase = createClient()
-    if (!supabase) { setErr('Supabase belum dikonfigurasi.'); setLoading(false); return }
+    if (!supabase) { setErr('Layanan belum siap. Coba lagi nanti.'); setLoading(false); return }
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
     if (error) { setErr(error.message); return }

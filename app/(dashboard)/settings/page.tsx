@@ -1,19 +1,21 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download, Upload, Trash2, Database, FileJson } from 'lucide-react'
+import { Download, Upload, Trash2, Database, FileJson, RefreshCw } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/store/useStore'
 import { useToast } from '@/hooks/useToast'
 import { formatIDR } from '@/lib/utils'
 import { demoTransactions } from '@/lib/defaultData'
+import { triggerCloudSync } from '@/hooks/useCloudSync'
 
 export default function SettingsPage() {
   const { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, restoreData, clearAll } = useStore()
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
+  const { isSyncing } = useStore()
 
   const handleExport = () => {
     const data = { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, exportedAt: new Date().toISOString(), version: 2 }
@@ -78,14 +80,21 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><FileJson className="h-5 w-5" />Backup & Restore</CardTitle><CardDescription>Simpan data ke file JSON, restore kapan saja. File tersimpan lokal — tidak ke server.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><FileJson className="h-5 w-5" />Backup & Restore</CardTitle><CardDescription>Simpan data ke file cadangan, restore kapan saja.</CardDescription></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleExport}><Download className="mr-2 h-4 w-4" />Export Backup (.json)</Button>
             <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={importing}><Upload className="mr-2 h-4 w-4" />{importing ? 'Mengimport...' : 'Import Backup'}</Button>
             <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImport} />
           </div>
-          <p className="text-xs text-gray-500">Tip: export rutin sebelum ganti HP. Import akan mengganti transaksi/wallet/tagihan dengan isi file.</p>
+          <p className="text-xs text-gray-500">Tip: export rutin sebelum ganti HP. Import akan mengganti transaksi/kantong/tagihan dengan isi file.</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />Sinkronisasi</CardTitle><CardDescription>Menggabungkan data HP & PC — perubahan terbaru yang dipakai. Otomatis sinkron saat online / buka app.</CardDescription></CardHeader>
+        <CardContent className="space-y-3">
+          <Button variant="outline" onClick={async () => { await triggerCloudSync(); toast({ title: 'Sinkron selesai', description: 'Data HP & PC digabung', variant: 'success' }) }} disabled={isSyncing}><RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />{isSyncing ? 'Menyinkron...' : 'Sinkron sekarang'}</Button>
+          <p className="text-xs text-gray-500">Gagal sinkron? Pastikan sudah login dan koneksi internet aktif.</p>
         </CardContent>
       </Card>
 

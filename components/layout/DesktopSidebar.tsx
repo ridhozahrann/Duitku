@@ -137,7 +137,7 @@ export default function DesktopSidebar() {
               <div className="text-xs text-amber-600">Belum login</div>
               <Link href="/login" className="block w-full text-center bg-primary-600 text-white py-2 rounded-lg text-sm font-medium">Masuk</Link>
               <Link href="/register" className="block w-full text-center border py-2 rounded-lg text-sm">Daftar</Link>
-              <p className="text-[10px] text-gray-400">Set env Supabase di Vercel biar cloud aktif. Lokal tetap jalan offline.</p>
+
             </div>
           )}
         </div>

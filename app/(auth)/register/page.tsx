@@ -20,7 +20,7 @@ export default function RegisterPage() {
     e.preventDefault()
     setErr(''); setMsg(''); setLoading(true)
     const supabase = createClient()
-    if (!supabase) { setErr('Supabase belum dikonfigurasi. Set NEXT_PUBLIC_SUPABASE_* di Vercel.'); setLoading(false); return }
+    if (!supabase) { setErr('Layanan daftar belum siap. Coba lagi nanti.'); setLoading(false); return }
     // ponytail: tanpa emailRedirectTo biar tidak butuh whitelist redirect di Supabase
     // upgrade: set emailRedirectTo setelah Site URL + Additional Redirects dikonfigurasi
     const { error } = await supabase.auth.signUp({ email, password })
@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Daftar</CardTitle><CardDescription>Buat akun Duit Mahasiswa — data keuangan terisolasi per akun (RLS)</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Daftar</CardTitle><CardDescription>Buat akun Duit Mahasiswa — data hanya bisa diakses akun kamu</CardDescription></CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="kamu@kampus.ac.id" /></div>

@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setErr(''); setMsg(''); setLoading(true)
     const supabase = createClient()
-    if (!supabase) { setErr('Supabase belum dikonfigurasi.'); setLoading(false); return }
+    if (!supabase) { setErr('Layanan belum siap. Coba lagi nanti.'); setLoading(false); return }
     const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
     setLoading(false)

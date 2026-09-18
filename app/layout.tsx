@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Duit Mahasiswa - Tracker Keuangan',
-  description: 'Aplikasi personal finance tracker untuk mahasiswa - Supabase cloud sync',
+  description: 'Catat keuangan harian mahasiswa — sinkron otomatis HP & PC',
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Duitku' },
 }

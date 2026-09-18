@@ -20,7 +20,7 @@ function LoginForm() {
     e.preventDefault()
     setErr(''); setLoading(true)
     const supabase = createClient()
-    if (!supabase) { setErr('Supabase belum dikonfigurasi. Set NEXT_PUBLIC_SUPABASE_* di Vercel.'); setLoading(false); return }
+    if (!supabase) { setErr('Layanan login belum siap. Coba lagi nanti.'); setLoading(false); return }
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) { setErr(error.message); return }
@@ -35,7 +35,7 @@ function LoginForm() {
       <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Memproses...' : 'Masuk'}</Button>
       <p className="text-sm text-center"><Link href="/forgot-password" className="text-gray-500 hover:text-primary-600 hover:underline">Lupa password?</Link></p>
       <p className="text-sm text-center text-gray-500">Belum punya akun? <Link href="/register" className="text-primary-600 hover:underline">Daftar</Link></p>
-      <p className="text-xs text-gray-400 text-center">Tanpa env Supabase, app tetap jalan localStorage-only.</p>
+
     </form>
   )
 }
@@ -43,7 +43,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Card>
-      <CardHeader><CardTitle>Masuk</CardTitle><CardDescription>Login ke Duit Mahasiswa (Supabase Auth)</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Masuk</CardTitle><CardDescription>Masuk ke akun Duit Mahasiswa</CardDescription></CardHeader>
       <CardContent>
         <Suspense fallback={<div className="text-sm text-gray-400">Memuat...</div>}>
           <LoginForm />
