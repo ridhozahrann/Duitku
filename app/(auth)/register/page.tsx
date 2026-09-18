@@ -21,7 +21,9 @@ export default function RegisterPage() {
     setErr(''); setMsg(''); setLoading(true)
     const supabase = createClient()
     if (!supabase) { setErr('Supabase belum dikonfigurasi. Set NEXT_PUBLIC_SUPABASE_* di Vercel.'); setLoading(false); return }
-    const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/auth/callback` } })
+    // ponytail: tanpa emailRedirectTo biar tidak butuh whitelist redirect di Supabase
+    // upgrade: set emailRedirectTo setelah Site URL + Additional Redirects dikonfigurasi
+    const { error } = await supabase.auth.signUp({ email, password })
     setLoading(false)
     if (error) { setErr(error.message); return }
     setMsg('Akun dibuat. Cek email untuk konfirmasi (jika email confirmation aktif), lalu login.')
