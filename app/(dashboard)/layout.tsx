@@ -17,12 +17,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="h-full">
       {/* Desktop sidebar */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <DesktopSidebar />
       </div>
 
       {/* Main content */}
-      <main className="md:ml-64 h-full">
+      <main className="lg:ml-64 h-full pb-20 lg:pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           {isSyncing && <div className="py-2 text-xs text-center text-gray-400">Menyinkronkan data...</div>}
           {isLoading ? (
@@ -35,8 +35,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
 
-      {/* Mobile bottom navigation */}
+      {/* Navigation: fixed bar HP + sidebar desktop, selalu ada */}
       <div className="md:hidden">
+        <MobileBottomNav />
+      </div>
+      {/* Desktop juga butuh bottom bar biar selalu ada navigasi */}
+      <div className="hidden md:block lg:hidden">
         <MobileBottomNav />
       </div>
     </div>
