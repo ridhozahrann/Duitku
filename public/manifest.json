@@ -1,10 +1,22 @@
 {
   "name": "Duit Mahasiswa",
   "short_name": "Duitku",
-  "description": "Tracker keuangan mahasiswa",
+  "description": "Tracker keuangan mahasiswa — Supabase cloud sync",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
-  "icons": []
+  "orientation": "any",
+  "categories": ["finance", "productivity"],
+  "lang": "id",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Tambah Transaksi", "url": "/transactions", "description": "Catat pemasukan/pengeluaran" },
+    { "name": "Grafik", "url": "/analytics", "description": "Lihat grafik keuangan" }
+  ]
 }

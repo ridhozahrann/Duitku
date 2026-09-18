@@ -16,10 +16,12 @@ import {
   ChevronRight,
   PlusCircle,
   PiggyBank,
-  Target
+  Target,
+  LogOut
 } from 'lucide-react'
 import TransactionDialog from '@/components/transactions/TransactionDialog'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { useAuth } from '@/components/AuthProvider'
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -38,6 +40,7 @@ export default function DesktopSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [showTransactionDialog, setShowTransactionDialog] = useState(false)
+  const { user, signOut } = useAuth()
 
   return (
     <>
@@ -115,6 +118,18 @@ export default function DesktopSidebar() {
             </button>
           </div>
         )}
+
+        {/* Account */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          {collapsed ? (
+            <button onClick={signOut} className="w-full flex justify-center p-2 text-gray-500 hover:text-red-600" title="Keluar"><LogOut className="h-5 w-5" /></button>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-xs text-gray-500 truncate">{user ? user.email : 'Mode offline (local)'}</div>
+              <button onClick={signOut} className="w-full flex items-center gap-2 text-sm text-gray-600 hover:text-red-600"><LogOut className="h-4 w-4" />Keluar</button>
+            </div>
+          )}
+        </div>
       </aside>
 
       <TransactionDialog
