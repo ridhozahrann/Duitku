@@ -19,8 +19,16 @@ export async function middleware(request: NextRequest) {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  // ponytail: if env missing (build without Supabase), skip auth — app stays localStorage-only and build green
-  if (!url || !anon) return NextResponse.next()
+  // wajib login: kalau env belum set di Vercel, tetap paksa redirect ke /login (biar share link gak lolos tamu)
+  // login page akan tampil error "Supabase belum dikonfigurasi" sampai env diisi — build tetap hijau
+  if (!url || !anon) {
+    const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+    const isExactPublic = PUBLIC_EXACT.includes(pathname)
+    if (!isPublic && !isExactPublic && !pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|json)$/) && !pathname.startsWith('/_next') && !pathname.startsWith('/api')) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.next()
+  }
 
   let supabaseResponse = NextResponse.next({ request })
 
