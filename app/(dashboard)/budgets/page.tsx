@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useStore } from '@/store/useStore'
 import { defaultCategories } from '@/lib/defaultData'
-import { formatIDR } from '@/lib/utils'
+import { formatIDR, parseThousands } from '@/lib/utils'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { useToast } from '@/hooks/useToast'
 
 export default function BudgetsPage() {
@@ -26,7 +27,7 @@ export default function BudgetsPage() {
 
   const handleAdd = () => {
     if (!catId) { toast({ title: 'Gagal', description: 'Pilih kategori', variant: 'destructive' }); return }
-    const lim = Number(limit)
+    const lim = parseThousands(limit)
     if (!lim || lim <= 0) { toast({ title: 'Gagal', description: 'Limit tidak valid', variant: 'destructive' }); return }
     addBudget({ categoryId: catId, limit: lim, period: 'monthly' })
     toast({ title: 'Berhasil', description: 'Budget disimpan', variant: 'success' })
@@ -44,7 +45,7 @@ export default function BudgetsPage() {
             <Select value={catId} onValueChange={setCatId}><SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
               <SelectContent>{defaultCategories.filter(c=>c.type==='expense').map(c=> <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent></Select>
           </div>
-          <div className="flex-1 space-y-2"><Label>Batas (Rp)</Label><Input type="number" placeholder="500000" value={limit} onChange={e=>setLimit(e.target.value)} /></div>
+          <div className="flex-1 space-y-2"><Label>Batas (Rp)</Label><CurrencyInput placeholder="500.000" value={limit} onValueChange={setLimit} /></div>
           <div className="flex items-end"><Button onClick={handleAdd} className="w-full sm:w-auto">Simpan</Button></div>
         </CardContent>
       </Card>

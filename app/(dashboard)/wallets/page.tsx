@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useStore } from '@/store/useStore'
-import { formatIDR } from '@/lib/utils'
+import { formatIDR, parseThousands } from '@/lib/utils'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { useToast } from '@/hooks/useToast'
 
 export default function WalletsPage() {
@@ -28,13 +29,13 @@ export default function WalletsPage() {
 
   const handleAdd = () => {
     if (!name.trim()) { toast({ title: 'Gagal', description: 'Nama kantong wajib diisi', variant: 'destructive' }); return }
-    addWallet({ name: name.trim(), description: '', balance: Number(balance) || 0, budgetLimit: budgetLimit ? Number(budgetLimit) : undefined, icon: 'wallet', color: 'blue' })
+    addWallet({ name: name.trim(), description: '', balance: parseThousands(balance) || 0, budgetLimit: budgetLimit ? parseThousands(budgetLimit) : undefined, icon: 'wallet', color: 'blue' })
     toast({ title: 'Berhasil', description: `Kantong "${name}" dibuat`, variant: 'success' })
     setName(''); setBalance(''); setBudgetLimit(''); setShowAdd(false)
   }
 
   const handleTransfer = () => {
-    const amt = Number(amount)
+    const amt = parseThousands(amount)
     if (!fromId || !toId) { toast({ title: 'Gagal', description: 'Pilih kantong asal & tujuan', variant: 'destructive' }); return }
     if (fromId === toId) { toast({ title: 'Gagal', description: 'Kantong asal & tujuan harus beda', variant: 'destructive' }); return }
     if (!amt || amt <= 0) { toast({ title: 'Gagal', description: 'Nominal tidak valid', variant: 'destructive' }); return }
@@ -112,8 +113,8 @@ export default function WalletsPage() {
           <DialogHeader><DialogTitle>Tambah Kantong</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label>Nama kantong</Label><Input placeholder="Misal: Tabungan Kos" value={name} onChange={e => setName(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Saldo awal (Rp)</Label><Input type="number" placeholder="0" value={balance} onChange={e => setBalance(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Batas pengeluaran (opsional)</Label><Input type="number" placeholder="0" value={budgetLimit} onChange={e => setBudgetLimit(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Saldo awal (Rp)</Label><CurrencyInput placeholder="0" value={balance} onValueChange={setBalance} /></div>
+            <div className="space-y-2"><Label>Batas pengeluaran (opsional)</Label><CurrencyInput placeholder="0" value={budgetLimit} onValueChange={setBudgetLimit} /></div>
             <Button className="w-full" onClick={handleAdd}>Simpan</Button>
           </div>
         </DialogContent>
@@ -130,7 +131,7 @@ export default function WalletsPage() {
             <div className="space-y-2"><Label>Ke</Label>
               <Select value={toId} onValueChange={setToId}><SelectTrigger><SelectValue placeholder="Pilih kantong tujuan" /></SelectTrigger><SelectContent>{wallets.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent></Select>
             </div>
-            <div className="space-y-2"><Label>Nominal</Label><Input type="number" placeholder="0" value={amount} onChange={e => setAmount(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Nominal</Label><CurrencyInput placeholder="0" value={amount} onValueChange={setAmount} /></div>
             <Button className="w-full" onClick={handleTransfer}>Transfer</Button>
           </div>
         </DialogContent>

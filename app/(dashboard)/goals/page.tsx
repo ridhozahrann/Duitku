@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useStore } from '@/store/useStore'
-import { formatIDR } from '@/lib/utils'
+import { formatIDR, parseThousands } from '@/lib/utils'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { useToast } from '@/hooks/useToast'
 
 export default function GoalsPage() {
@@ -21,7 +22,7 @@ export default function GoalsPage() {
 
   const handleAdd = () => {
     if (!name.trim()) { toast({ title: 'Gagal', description: 'Nama wajib diisi', variant: 'destructive' }); return }
-    const t = Number(target)
+    const t = parseThousands(target)
     if (!t || t <= 0) { toast({ title: 'Gagal', description: 'Target tidak valid', variant: 'destructive' }); return }
     addGoal({ name: name.trim(), target: t, current: 0 })
     toast({ title: 'Berhasil', description: `Goal "${name}" dibuat`, variant: 'success' })
@@ -29,7 +30,7 @@ export default function GoalsPage() {
   }
 
   const handleTopUp = (id: string) => {
-    const amt = Number(topUpAmt)
+    const amt = parseThousands(topUpAmt)
     if (!amt || amt <= 0) { toast({ title: 'Gagal', description: 'Nominal tidak valid', variant: 'destructive' }); return }
     const g = goals.find(x => x.id === id)
     if (!g) return
@@ -68,7 +69,7 @@ export default function GoalsPage() {
                   <div className="flex gap-2">
                     {topUpId===g.id ? (
                       <>
-                        <Input type="number" placeholder="Nominal" value={topUpAmt} onChange={e=>setTopUpAmt(e.target.value)} className="flex-1" />
+                        <CurrencyInput placeholder="Nominal" value={topUpAmt} onValueChange={setTopUpAmt} className="flex-1" />
                         <Button size="sm" onClick={()=>handleTopUp(g.id)}>Simpan</Button>
                         <Button size="sm" variant="ghost" onClick={()=>setTopUpId(null)}>Batal</Button>
                       </>
@@ -96,7 +97,7 @@ export default function GoalsPage() {
           <DialogHeader><DialogTitle>Buat Target Baru</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label>Nama target</Label><Input placeholder="Misal: Laptop baru" value={name} onChange={e=>setName(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Target (Rp)</Label><Input type="number" placeholder="5000000" value={target} onChange={e=>setTarget(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Target (Rp)</Label><CurrencyInput placeholder="5.000.000" value={target} onValueChange={setTarget} /></div>
             <Button className="w-full" onClick={handleAdd}>Simpan</Button>
           </div>
         </DialogContent>

@@ -14,6 +14,16 @@ export function formatIDR(amount: number): string {
   }).format(amount)
 }
 
+export function formatThousands(value: string | number): string {
+  const digits = String(value ?? '').replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+  if (!digits) return ''
+  return new Intl.NumberFormat('id-ID').format(Number(digits))
+}
+export function parseThousands(value: string): number {
+  const n = Number(String(value ?? '').replace(/\D/g, ''))
+  return isNaN(n) ? 0 : n
+}
+
 export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('id-ID', {
     day: 'numeric',

@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
-import { formatIDR, formatDate } from '@/lib/utils'
+import { formatIDR, formatDate, parseThousands } from '@/lib/utils'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { useStore } from '@/store/useStore'
 import { useToast } from '@/hooks/useToast'
 import { format } from 'date-fns'
@@ -37,8 +38,9 @@ export default function BillsPage() {
   const isOverdue = (d: Date) => new Date(d).getTime() < Date.now() && new Date(d).toDateString() !== new Date().toDateString()
 
   const handleAdd = () => {
-    if (!name.trim() || !amount) { toast({ title: 'Gagal', description: 'Nama & nominal wajib diisi', variant: 'destructive' }); return }
-    addBill({ name: name.trim(), amount: Number(amount), category, dueDate, recurrence: recurrence as any, status: isOverdue(dueDate) ? 'overdue' : 'unpaid', notes: '' })
+    const amt = parseThousands(amount)
+    if (!name.trim() || !amt) { toast({ title: 'Gagal', description: 'Nama & nominal wajib diisi', variant: 'destructive' }); return }
+    addBill({ name: name.trim(), amount: amt, category, dueDate, recurrence: recurrence as any, status: isOverdue(dueDate) ? 'overdue' : 'unpaid', notes: '' })
     toast({ title: 'Berhasil', description: `Tagihan "${name}" ditambah`, variant: 'success' })
     setName(''); setAmount(''); setShowAdd(false)
   }
@@ -122,7 +124,7 @@ export default function BillsPage() {
           <DialogHeader><DialogTitle>Tambah Tagihan</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label>Nama</Label><Input placeholder="Internet Kos" value={name} onChange={e => setName(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Nominal (Rp)</Label><Input type="number" placeholder="0" value={amount} onChange={e => setAmount(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Nominal (Rp)</Label><CurrencyInput placeholder="0" value={amount} onValueChange={setAmount} /></div>
             <div className="space-y-2"><Label>Kategori</Label><Input placeholder="Tagihan" value={category} onChange={e => setCategory(e.target.value)} /></div>
             <div className="space-y-2"><Label>Periode</Label>
               <Select value={recurrence} onValueChange={setRecurrence}><SelectTrigger><SelectValue /></SelectTrigger>

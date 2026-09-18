@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CurrencyInput } from '@/components/ui/currency-input'
+import { formatThousands, parseThousands } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -103,10 +105,11 @@ export default function TransactionDialog({ open, onOpenChange, transactionId }:
           <div className="space-y-2">
             <Label htmlFor="amount">Nominal ({selectedType === 'income' ? 'Pemasukan' : 'Pengeluaran'})</Label>
             <div className="relative">
-              <Input id="amount" type="number" placeholder="0" {...register('amount')} className="text-2xl font-bold pl-12" inputMode="numeric" />
+              <CurrencyInput id="amount" placeholder="0" value={String(amount ?? '').replace(/\D/g,'')} onValueChange={v => setValue('amount', parseThousands(v) || (undefined as any), { shouldValidate: true })} className="text-2xl font-bold pl-12" />
+              <input type="hidden" {...register('amount')} />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</div>
             </div>
-            {amount ? <div className="text-sm text-gray-600">Ditulis: {formatIDR(amount)}</div> : null}
+            {amount ? <div className="text-sm text-gray-600">Ditulis: {formatIDR(Number(String(amount).replace(/\D/g,'')) || amount as number)} • Ketik: {formatThousands(String(amount))}</div> : null}
             {errors.amount && <div className="text-sm text-red-600">{errors.amount.message}</div>}
           </div>
 
