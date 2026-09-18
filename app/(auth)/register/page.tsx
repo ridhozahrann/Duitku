@@ -26,8 +26,8 @@ export default function RegisterPage() {
     const { error } = await supabase.auth.signUp({ email, password })
     setLoading(false)
     if (error) { setErr(error.message); return }
-    setMsg('Akun dibuat. Cek email untuk konfirmasi (jika email confirmation aktif), lalu login.')
-    setTimeout(()=>router.push('/login'), 1500)
+    setMsg('Akun dibuat. Silakan login.')
+    setTimeout(()=>router.push('/login'), 1000)
   }
 
   return (
