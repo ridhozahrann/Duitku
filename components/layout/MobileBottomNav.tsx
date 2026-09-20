@@ -34,7 +34,7 @@ export default function MobileBottomNav() {
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 z-40">
         <div className="flex justify-between items-center px-2 py-2">
           {mainItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href === '/' && pathname === '/dashboard')
             const Icon = item.icon
             return (
               <Link key={item.name} href={item.href} className={`flex flex-col items-center justify-center p-2 rounded-lg ${isActive ? 'text-primary-600' : 'text-gray-500'}`}>

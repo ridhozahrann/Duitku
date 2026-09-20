@@ -87,7 +87,7 @@ export default function DesktopSidebar() {
         {/* Navigation */}
         <nav className="p-4 space-y-1 overflow-y-auto max-h-[60vh]">
           {navItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href === '/' && pathname === '/dashboard')
             const Icon = item.icon
             
             return (
