@@ -52,7 +52,7 @@ interface Store {
   setSyncing: (v: boolean) => void
 }
 
-const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36)
+const generateId = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)
 const toDate = (d: unknown) => d instanceof Date ? d : new Date(d as string)
 
 const initialWallets: Wallet[] = [
@@ -243,6 +243,18 @@ export const useStore = create<Store>()((set, get) => ({
           budgets: data.budgets || get().budgets,
           goals: data.goals ? data.goals.map(reviveGoal) : get().goals,
         })
+        // sync restored data to cloud
+        void getCloud().then(c => {
+          if (!c) return
+          const s = get()
+          s.wallets.forEach(w => c.supabase.from('wallets').upsert(walletToRow(w, c.userId)).then(()=>{}))
+          s.transactions.forEach(t => c.supabase.from('transactions').upsert(txToRow(t, c.userId)).then(()=>{}))
+          s.bills.forEach(b => c.supabase.from('bills').upsert(billToRow(b, c.userId)).then(()=>{}))
+          s.habits.forEach(h => c.supabase.from('habits').upsert(habitToRow(h, c.userId)).then(()=>{}))
+          s.budgets.forEach(b => c.supabase.from('budgets').upsert(budgetToRow(b, c.userId)).then(()=>{}))
+          s.goals.forEach(g => c.supabase.from('savings_goals').upsert(goalToRow(g, c.userId)).then(()=>{}))
+          s.habitLogs.forEach(l => c.supabase.from('habit_logs').upsert({ habit_id: l.habitId, user_id: c.userId, date: l.date }).then(()=>{}))
+        })
       },
       hydrateCloud: (data) => {
         const reviveTx = (t: Transaction) => ({ ...t, date: toDate(t.date), createdAt: toDate(t.createdAt), updatedAt: toDate(t.updatedAt) })
@@ -277,7 +289,22 @@ export const useStore = create<Store>()((set, get) => ({
           goals: data.goals.map(reviveGoal),
         })
       },
-      clearAll: () => set({ transactions: [], bills: [], wallets: initialWallets, habitLogs: [], budgets: [], goals: [] }),
+      clearAll: () => {
+        set({ transactions: [], bills: [], wallets: initialWallets, habitLogs: [], budgets: [], goals: [], habits: [] })
+        void getCloud().then(c => {
+          if (!c) return
+          const uid = c.userId
+          Promise.all([
+            c.supabase.from('habit_logs').delete().eq('user_id', uid),
+            c.supabase.from('transactions').delete().eq('user_id', uid),
+            c.supabase.from('bills').delete().eq('user_id', uid),
+            c.supabase.from('budgets').delete().eq('user_id', uid),
+            c.supabase.from('savings_goals').delete().eq('user_id', uid),
+            c.supabase.from('habits').delete().eq('user_id', uid),
+            c.supabase.from('wallets').delete().eq('user_id', uid),
+          ]).then(() => {})
+        })
+      },
 
       getBalance: () => get().transactions.reduce((bal, t) => t.type === 'income' ? bal + t.amount : bal - t.amount, 0),
       getMonthlyIncome: () => {
@@ -292,7 +319,7 @@ export const useStore = create<Store>()((set, get) => ({
       },
       getTransactionsByDate: (date) => {
         const target = new Date(date); target.setHours(0, 0, 0, 0)
-        return get().transactions.filter((t) => { const d = toDate(t.date); d.setHours(0, 0, 0, 0); return d.getTime() === target.getTime() })
+        return get().transactions.filter((t) => { const d = new Date(toDate(t.date).getTime()); d.setHours(0, 0, 0, 0); return d.getTime() === target.getTime() })
       },
       getTransactionsByCategory: (categoryId) => get().transactions.filter((t) => t.categoryId === categoryId),
       setLoading: (loading) => { set({ isLoading: loading }) },

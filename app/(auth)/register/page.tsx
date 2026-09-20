@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
@@ -19,6 +20,7 @@ export default function RegisterPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(''); setMsg(''); setLoading(true)
+    if (password !== confirmPassword) { setErr('Password dan konfirmasi tidak cocok'); setLoading(false); return }
     const supabase = createClient()
     if (!supabase) { setErr('Layanan daftar belum siap. Coba lagi nanti.'); setLoading(false); return }
     // ponytail: tanpa emailRedirectTo biar tidak butuh whitelist redirect di Supabase
@@ -37,6 +39,7 @@ export default function RegisterPage() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="kamu@kampus.ac.id" /></div>
           <div className="space-y-2"><Label htmlFor="password">Password (min 6)</Label><Input id="password" type="password" required minLength={6} value={password} onChange={e=>setPassword(e.target.value)} /></div>
+          <div className="space-y-2"><Label htmlFor="confirmPassword">Konfirmasi Password</Label><Input id="confirmPassword" type="password" required minLength={6} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} /></div>
           {err && <p className="text-sm text-red-600">{err}</p>}
           {msg && <p className="text-sm text-green-600">{msg}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Memproses...' : 'Daftar'}</Button>

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthProvider } from '@/components/AuthProvider'
+import { Toaster } from '@/components/Toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <main className="h-full">{children}</main>
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var s=localStorage.getItem('duit-theme');var d=s? s==='dark' : window.matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.classList.toggle('dark',d)}catch(e){}})()` }} />

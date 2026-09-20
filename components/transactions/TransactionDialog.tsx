@@ -52,9 +52,10 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   transactionId?: string
+  defaultType?: 'income' | 'expense'
 }
 
-export default function TransactionDialog({ open, onOpenChange, transactionId }: Props) {
+export default function TransactionDialog({ open, onOpenChange, transactionId, defaultType = 'expense' }: Props) {
   const { toast } = useToast()
   const { addTransaction, updateTransaction, transactions, wallets } = useStore()
   const editing = transactions.find(t => t.id === transactionId)
@@ -68,9 +69,9 @@ export default function TransactionDialog({ open, onOpenChange, transactionId }:
     if (open && editing) {
       reset({ type: editing.type, amount: editing.amount, categoryId: editing.categoryId, walletId: editing.walletId || wallets[0]?.id, description: editing.description, date: new Date(editing.date) })
     } else if (open && !editing) {
-      reset({ type: 'expense', amount: undefined, categoryId: '', walletId: wallets[0]?.id || '', description: '', date: new Date() })
+      reset({ type: defaultType, amount: undefined, categoryId: '', walletId: wallets[0]?.id || '', description: '', date: new Date() })
     }
-  }, [open, editing, wallets, reset])
+  }, [open, editing, wallets, reset, defaultType])
 
   const selectedType = watch('type')
   const amount = watch('amount')

@@ -14,6 +14,7 @@ import { defaultCategories } from '@/lib/defaultData'
 
 export default function DashboardPage() {
   const [showTx, setShowTx] = useState(false)
+  const [defaultTxType, setDefaultTxType] = useState<'income' | 'expense'>('expense')
   const [balanceVisible, setBalanceVisible] = useState(true)
   const { transactions, getBalance, getMonthlyIncome, getMonthlyExpense, budgets, bills, goals, habits, habitLogs } = useStore()
 
@@ -63,8 +64,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Button variant="expense" size="lg" onClick={() => setShowTx(true)} className="h-16 text-lg">Tambah Pengeluaran</Button>
-        <Button variant="income" size="lg" onClick={() => setShowTx(true)} className="h-16 text-lg">Tambah Pemasukan</Button>
+        <Button variant="expense" size="lg" onClick={() => { setDefaultTxType('expense'); setShowTx(true) }} className="h-16 text-lg">Tambah Pengeluaran</Button>
+        <Button variant="income" size="lg" onClick={() => { setDefaultTxType('income'); setShowTx(true) }} className="h-16 text-lg">Tambah Pemasukan</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -128,7 +129,7 @@ export default function DashboardPage() {
         </div></CardContent></Card>
       )}
 
-      <TransactionDialog open={showTx} onOpenChange={setShowTx} />
+      <TransactionDialog open={showTx} onOpenChange={setShowTx} defaultType={defaultTxType} />
     </div>
   )
 }
