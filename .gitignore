@@ -13,6 +13,9 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 
+# local tools
+opencode.json
+
 # os
 .DS_Store
 Thumbs.db
