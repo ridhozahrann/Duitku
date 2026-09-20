@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download, Upload, Trash2, Database, FileJson, RefreshCw } from 'lucide-react'
+import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut } from 'lucide-react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/store/useStore'
@@ -9,9 +10,11 @@ import { useToast } from '@/hooks/useToast'
 import { formatIDR } from '@/lib/utils'
 import { demoTransactions } from '@/lib/defaultData'
 import { triggerCloudSync } from '@/hooks/useCloudSync'
+import { useAuth } from '@/components/AuthProvider'
 
 export default function SettingsPage() {
   const { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, restoreData, clearAll } = useStore()
+  const { user, signOut } = useAuth()
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
@@ -68,6 +71,28 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Pengaturan</h1>
         <p className="text-gray-600 dark:text-zinc-400">Backup, restore, dan kelola data</p>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><User className="h-5 w-5" />Akun Saya</CardTitle><CardDescription>Informasi akun dan sesi login</CardDescription></CardHeader>
+        <CardContent>
+          {user ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-sm text-gray-900 dark:text-zinc-100">{user.email}</div>
+                <div className="text-xs text-gray-500">Tersambung ke cloud sync</div>
+              </div>
+              <Button variant="outline" size="sm" onClick={signOut} className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20">
+                <LogOut className="mr-2 h-4 w-4" />Keluar
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">Belum masuk ke akun</div>
+              <Link href="/login"><Button size="sm">Masuk</Button></Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Database className="h-5 w-5" />Ringkasan Data</CardTitle></CardHeader>
