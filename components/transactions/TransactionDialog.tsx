@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { CalendarIcon, Wallet, Tag, FileText, Calendar, Plus } from 'lucide-react'
+import { CalendarIcon, Wallet, Tag, FileText, Calendar, Plus, Minus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -142,7 +142,15 @@ export default function TransactionDialog({ open, onOpenChange, transactionId, d
                 onClick={() => setShowQuickAddCat(!showQuickAddCat)}
                 className="text-xs text-primary-600 hover:underline flex items-center gap-1 font-medium"
               >
-                <Plus className="h-3.5 w-3.5" /> Kategori Baru
+                {showQuickAddCat ? (
+                  <>
+                    <Minus className="h-3.5 w-3.5" /> Batal
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-3.5 w-3.5" /> Kategori Baru
+                  </>
+                )}
               </button>
             </div>
 
