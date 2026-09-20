@@ -1,54 +1,101 @@
-# Duit Mahasiswa - Personal Finance Tracker
+# Duit Mahasiswa - Finance Tracker
 
-Aplikasi web personal finance tracker untuk mahasiswa Indonesia — mobile-first, offline (localStorage), Rupiah.
+Aplikasi pencatat keuangan harian mahasiswa Indonesia. Mendukung sinkronisasi cloud multi-perangkat (HP & PC), manajemen kantong uang, pengingat tagihan berulang, budget bulanan, dan analisis keuangan.
 
-## Fitur
+## Fitur Utama
 
-### Phase 1 — MVP ✅
-- Dashboard (saldo, income/expense bulanan, sisa saldo, hide/show)
-- Transaksi CRUD (kategori, tanggal, catatan, edit/hapus)
-- Kantong default + localStorage persist
-- Bahasa Indonesia & `formatIDR`
+- **Cloud Sync & Akun**
+  - Autentikasi Supabase (login, register dengan konfirmasi password, reset password via email).
+  - Data tersimpan di Supabase PostgreSQL dengan Row Level Security (RLS) per akun.
+  - Sinkron otomatis antara HP dan PC saat terhubung internet.
 
-### Phase 2 — DONE ✅ (dulu Coming Soon)
-- **Kantong Uang** — tambah/hapus/transfer antar kantong, saldo sinkron transaksi, `budgetLimit` bar
-- **Grafik** (`recharts`) — Line tren harian, Bar per kategori, Pie distribusi, filter 7d/30d/all
-- **Filter & Search transaksi** — search kategori/catatan/nominal, filter tipe & kategori, Export CSV
-- **Pengingat Tagihan** — persist `store.bills`, overdue auto, lunas/batal, riwayat
-- **Backup & Restore** — export/import JSON (trx/wallet/bill/habit/budget/goal), muat demo, hapus semua
+- **Manajemen Transaksi**
+  - Catat pemasukan dan pengeluaran.
+  - Filter berdasarkan bulan, tipe, dan kategori.
+  - Pencarian cepat berdasarkan deskripsi, kategori, atau nominal.
+  - Pagination 50 transaksi per halaman.
+  - Export data ke format CSV.
 
-### Phase 3 — DONE ✅
-- **Budget Bulanan** (`/budgets`) — batas per kategori, bar 80%/100% warna, jebol indicator
-- **Target Nabung** (`/goals`) — tambah/topup/kurangi, progress bar, tercapai confetti
-- **Kebiasaan Harian** (`/habits`) — tracker 7 hari tap-to-check, streak, mingguan progress
-- **Insights** (`/insights`) — tren vs bulan lalu, proyeksi, runway, budget jebol, rekomendasi rule-based (tanpa AI)
-- **Dashboard widgets** — budget warning, tagihan, top goal, streak (link ke halaman)
+- **Kantong Uang (Multi-Wallet)**
+  - Kelola beberapa sumber uang (Dompet Utama, Tabungan Kos, Rekening, dll).
+  - Batas pengeluaran (budget limit) per kantong.
+  - Transfer saldo antar kantong.
 
-## Teknologi
-Next.js 15 (App Router) · TypeScript · Tailwind · Zustand persist · React Hook Form + Zod · Radix UI · Recharts · date-fns
+- **Pengingat Tagihan Berulang**
+  - Dukungan periode tagihan: Bulanan, Mingguan, Tahunan, atau Sekali Bayar.
+  - **Otomatisasi Lunas**: Saat tagihan berulang di-mark lunas, tanggal jatuh tempo otomatis bergeser ke periode berikutnya dan transaksi pengeluaran tercatat otomatis.
+  - **Fitur Jeda (Libur Semester)**: Nonaktifkan sementara tagihan rutin (misal WiFi kos) saat libur semester tanpa menghapus data.
 
-## Cara Menjalankan
-```bash
-npm install
-npm run dev # http://localhost:3000
-npm run build # 14 routes, 0 error
+- **Budget Bulanan & Target Nabung**
+  - **Budget**: Batas pengeluaran per kategori dengan indikator warna (aman, peringatan 80%, jebol).
+  - **Target Nabung**: Set target tabungan (laptop, liburan, dll) dengan fitur simpan/kurangi nominal.
+
+- **Kebiasaan Keuangan (Habit Tracker)**
+  - Tracker 7 hari untuk membangun kebiasaan catat keuangan.
+  - Perhitungan streak harian berturut-turut.
+
+- **Analisis & Insights**
+  - Grafik tren harian pemasukan vs pengeluaran (`Recharts`).
+  - Diagram lingkaran distribusi pengeluaran per kategori.
+  - Proyeksi pengeluaran bulanan, burn rate harian, dan daya tahan saldo (runway).
+  - Rekomendasi otomatis berdasarkan rule lokal.
+
+- **Backup & Restore**
+  - Export & import data backup dalam format `.json`.
+  - Opsi memuat data demo untuk uji coba.
+
+- **Tampilan & PWA**
+  - Desain responsive (Sidebar untuk Desktop, Bottom Nav untuk Mobile).
+  - Mode Gelap (Dark Mode) & Mode Terang (Light Mode).
+  - Service Worker (PWA) untuk navigasi cepat.
+
+## Stack Teknologi
+
+- **Framework**: Next.js 16 (App Router)
+- **Bahasa**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **Database & Auth**: Supabase (PostgreSQL, `@supabase/ssr`, RLS)
+- **UI Components**: Radix UI, Lucide Icons
+- **Grafik**: Recharts
+- **Form & Validasi**: React Hook Form + Zod
+
+## Cara Menjalankan Lokal
+
+1. **Clone repository dan install dependensi**:
+   ```bash
+   git clone https://github.com/ridhozahrann/Duitku.git
+   cd Duitku
+   npm install
+   ```
+
+2. **Konfigurasi Environment Variables**:
+   Buat file `.env.local` di root project:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://<project-id>.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+3. **Setup Database Supabase**:
+   Jalankan query yang ada di file `supabase/schema.sql` pada SQL Editor di Dashboard Supabase.
+
+4. **Jalankan server pengembangan**:
+   ```bash
+   npm run dev
+   ```
+   Buka [http://localhost:3000](http://localhost:3000) di browser.
+
+## Struktur Project
+
 ```
-
-## Struktur
+├── app/
+│   ├── (auth)/        # Route halaman auth (login, register, forgot-password, reset-password)
+│   ├── (dashboard)/   # Route utama (dashboard, transactions, wallets, bills, budgets, goals, habits, analytics, insights, settings)
+│   └── auth/callback/ # Supabase OAuth / Recovery callback route
+├── components/        # Component UI (Toaster, TransactionDialog, Layout, Chart, dll)
+├── hooks/             # Custom React Hooks (useCloudSync, useToast)
+├── lib/               # Utility, default data, Supabase client configuration
+├── store/             # Zustand store (useStore.ts)
+├── supabase/          # SQL Schema & RLS Policies (schema.sql)
+└── types/             # TypeScript interface definitions
 ```
-/app/(dashboard)  dashboard, transactions, wallets, analytics, bills, budgets, goals, habits, insights, settings
-/components       ui, layout (DesktopSidebar + MobileBottomNav + More), transactions, dashboard
-/store            useStore.ts (persist duit-mahasiswa-storage, revive Date)
-/types            Transaction, Category, Wallet, Bill, Habit, HabitLog, Budget, SavingsGoal
-/lib              defaultData.ts (kategori + demoTransactions), utils.ts (formatIDR)
-```
-
-## Data Model
-Saldo = total income − total expense. Saldo kantong sinkron otomatis (add/update/delete transaksi + transfer). Persist `localStorage` key `duit-mahasiswa-storage`.
-
-Demo: Uang bulanan Rp2jt, makan 25k, transport 15k, kos 1jt, beasiswa 500k → saldo Rp1.460.000.
-
-## Catatan
-- Semua halaman client (`'use client'`) karena Zustand + localStorage.
-- Tidak ada backend — file backup JSON bawa sendiri kalau ganti HP.
-- Insights rule lokal, bukan nasihat finansial.
