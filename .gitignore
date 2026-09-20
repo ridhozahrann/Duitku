@@ -13,8 +13,11 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 
-# local tools
+# local tools & IDEs
 opencode.json
+.vscode/
+.idea/
+*.log
 
 # os
 .DS_Store
