@@ -9,8 +9,10 @@ Aplikasi pencatat keuangan harian mahasiswa Indonesia. Mendukung sinkronisasi cl
   - Data tersimpan di Supabase PostgreSQL dengan Row Level Security (RLS) per akun.
   - Sinkron otomatis antara HP dan PC saat terhubung internet.
 
-- **Manajemen Transaksi**
+- **Manajemen Transaksi & Kategori**
   - Catat pemasukan dan pengeluaran.
+  - **Kelola Kategori**: Tambah kategori baru secara manual (dengan preset emoji, warna, & tipe) serta hapus kategori yang tidak dibutuhkan.
+  - **Quick Add Kategori**: Tambah kategori baru langsung dari dialog pencatatan transaksi.
   - Filter berdasarkan bulan, tipe, dan kategori.
   - Pencarian cepat berdasarkan deskripsi, kategori, atau nominal.
   - Pagination 50 transaksi per halaman.

@@ -105,6 +105,18 @@ create table if not exists savings_goals (
 );
 create index if not exists savings_goals_user_idx on savings_goals(user_id);
 
+-- ================= CATEGORIES =================
+create table if not exists categories (
+  id text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  type text not null check (type in ('income','expense')),
+  icon text not null default '📦',
+  color text not null default 'gray',
+  created_at timestamptz not null default now()
+);
+create index if not exists categories_user_idx on categories(user_id);
+
 -- ================= RLS =================
 alter table wallets enable row level security;
 alter table transactions enable row level security;
@@ -113,6 +125,7 @@ alter table habits enable row level security;
 alter table habit_logs enable row level security;
 alter table budgets enable row level security;
 alter table savings_goals enable row level security;
+alter table categories enable row level security;
 
 do $$ declare r record; begin for r in select policyname, tablename from pg_policies where schemaname='public' loop execute format('drop policy if exists %I on %I', r.policyname, r.tablename); end loop; end $$;
 
@@ -149,3 +162,8 @@ create policy "goals_select_own" on savings_goals for select using (auth.uid() =
 create policy "goals_insert_own" on savings_goals for insert with check (auth.uid() = user_id);
 create policy "goals_update_own" on savings_goals for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "goals_delete_own" on savings_goals for delete using (auth.uid() = user_id);
+
+create policy "cat_select_own" on categories for select using (auth.uid() = user_id);
+create policy "cat_insert_own" on categories for insert with check (auth.uid() = user_id);
+create policy "cat_update_own" on categories for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "cat_delete_own" on categories for delete using (auth.uid() = user_id);

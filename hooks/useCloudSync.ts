@@ -3,7 +3,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/AuthProvider'
 import { useStore } from '@/store/useStore'
-import { rowToWallet, rowToTx, rowToBill, rowToHabit, rowToBudget, rowToGoal } from '@/lib/supabase/mappers'
+import { rowToWallet, rowToTx, rowToBill, rowToHabit, rowToBudget, rowToGoal, rowToCategory } from '@/lib/supabase/mappers'
 import { useToast } from '@/hooks/useToast'
 
 let globalPull: (() => Promise<void>) | null = null
@@ -28,7 +28,7 @@ export function useCloudSync() {
 
     setSyncing(true)
     try {
-      const [walletsRes, txRes, billsRes, habitsRes, logsRes, budgetsRes, goalsRes] = await Promise.all([
+      const [walletsRes, txRes, billsRes, habitsRes, logsRes, budgetsRes, goalsRes, categoriesRes] = await Promise.all([
         supabase.from('wallets').select('*').order('created_at'),
         supabase.from('transactions').select('*').order('date', { ascending: false }).limit(2000),
         supabase.from('bills').select('*').order('due_date'),
@@ -36,6 +36,7 @@ export function useCloudSync() {
         supabase.from('habit_logs').select('*'),
         supabase.from('budgets').select('*'),
         supabase.from('savings_goals').select('*').order('created_at'),
+        supabase.from('categories').select('*'),
       ])
       const firstErr = walletsRes.error || txRes.error || billsRes.error || habitsRes.error || logsRes.error || budgetsRes.error || goalsRes.error
       if (firstErr) {
@@ -56,6 +57,7 @@ export function useCloudSync() {
         habitLogs: (logsRes.data ?? []).map((r: any) => ({ habitId: r.habit_id, date: r.date })),
         budgets: (budgetsRes.data ?? []).map(rowToBudget),
         goals: (goalsRes.data ?? []).map(rowToGoal),
+        categories: categoriesRes.data?.length ? categoriesRes.data.map(rowToCategory) : undefined,
       })
     } catch (e: any) {
       toast({ title: 'Sinkron gagal', description: e?.message ?? String(e), variant: 'destructive' })

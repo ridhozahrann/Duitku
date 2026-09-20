@@ -16,3 +16,6 @@ export function budgetToRow(b: any, userId: string) { return { id: b.id, user_id
 
 export function rowToGoal(r: any) { return { id: r.id, name: r.name, target: Number(r.target), current: Number(r.current), deadline: r.deadline ? new Date(r.deadline) : undefined, createdAt: new Date(r.created_at) } }
 export function goalToRow(g: any, userId: string) { return { id: g.id, user_id: userId, name: g.name, target: g.target, current: g.current, deadline: g.deadline ? (g.deadline instanceof Date ? g.deadline.toISOString() : new Date(g.deadline).toISOString()) : null } }
+
+export function rowToCategory(r: any) { return { id: r.id, name: r.name, type: r.type, icon: r.icon, color: r.color } }
+export function categoryToRow(c: any, userId: string) { return { id: c.id, user_id: userId, name: c.name, type: c.type, icon: c.icon, color: c.color } }

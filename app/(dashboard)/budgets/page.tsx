@@ -7,13 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useStore } from '@/store/useStore'
-import { defaultCategories } from '@/lib/defaultData'
 import { formatIDR, parseThousands } from '@/lib/utils'
 import { CurrencyInput } from '@/components/ui/currency-input'
 import { useToast } from '@/hooks/useToast'
 
 export default function BudgetsPage() {
-  const { budgets, transactions, addBudget, deleteBudget } = useStore()
+  const { budgets, transactions, categories, addBudget, deleteBudget } = useStore()
   const { toast } = useToast()
   const [catId, setCatId] = useState('')
   const [limit, setLimit] = useState('')
@@ -43,7 +42,7 @@ export default function BudgetsPage() {
         <CardContent className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 space-y-2"><Label>Kategori</Label>
             <Select value={catId} onValueChange={setCatId}><SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-              <SelectContent>{defaultCategories.filter(c=>c.type==='expense').map(c=> <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent></Select>
+              <SelectContent>{categories.filter(c=>c.type==='expense').map(c=> <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="flex-1 space-y-2"><Label>Batas (Rp)</Label><CurrencyInput placeholder="500.000" value={limit} onValueChange={setLimit} /></div>
           <div className="flex items-end"><Button onClick={handleAdd} className="w-full sm:w-auto">Simpan</Button></div>
@@ -53,7 +52,7 @@ export default function BudgetsPage() {
       {budgets.length ? (
         <div className="grid gap-4">
           {budgets.map(b => {
-            const cat = defaultCategories.find(c=>c.id===b.categoryId)
+            const cat = categories.find(c=>c.id===b.categoryId)
             const spent = spentByCat[b.categoryId] || 0
             const pct = Math.min(150, (spent / b.limit) * 100)
             const over = spent > b.limit

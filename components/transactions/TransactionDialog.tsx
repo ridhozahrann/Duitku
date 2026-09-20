@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { CalendarIcon, Wallet, Tag, FileText, Calendar } from 'lucide-react'
+import { CalendarIcon, Wallet, Tag, FileText, Calendar, Plus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,6 @@ import {
 } from '@/components/ui/popover'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { useStore } from '@/store/useStore'
-import { defaultCategories } from '@/lib/defaultData'
 import { formatIDR } from '@/lib/utils'
 import { useToast } from '@/hooks/useToast'
 
@@ -57,8 +56,12 @@ interface Props {
 
 export default function TransactionDialog({ open, onOpenChange, transactionId, defaultType = 'expense' }: Props) {
   const { toast } = useToast()
-  const { addTransaction, updateTransaction, transactions, wallets } = useStore()
+  const { addTransaction, updateTransaction, transactions, wallets, categories: storeCategories, addCategory } = useStore()
   const editing = transactions.find(t => t.id === transactionId)
+
+  const [showQuickAddCat, setShowQuickAddCat] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatIcon, setNewCatIcon] = useState('📦')
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -75,7 +78,24 @@ export default function TransactionDialog({ open, onOpenChange, transactionId, d
 
   const selectedType = watch('type')
   const amount = watch('amount')
-  const categories = defaultCategories.filter(cat => cat.type === selectedType)
+  const categories = storeCategories.filter(cat => cat.type === selectedType)
+
+  const handleCreateQuickCategory = () => {
+    if (!newCatName.trim()) return
+    const id = `cat-${Date.now()}`
+    addCategory({
+      id,
+      name: newCatName.trim(),
+      type: selectedType,
+      icon: newCatIcon || '📦',
+      color: 'gray'
+    })
+    setValue('categoryId', id)
+    setNewCatName('')
+    setNewCatIcon('📦')
+    setShowQuickAddCat(false)
+    toast({ title: 'Berhasil', description: `Kategori "${newCatName}" dibuat`, variant: 'success' })
+  }
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -115,7 +135,28 @@ export default function TransactionDialog({ open, onOpenChange, transactionId, d
           </div>
 
           <div className="space-y-2">
-            <Label><Tag className="inline h-4 w-4 mr-2" />Kategori</Label>
+            <div className="flex items-center justify-between">
+              <Label><Tag className="inline h-4 w-4 mr-2" />Kategori</Label>
+              <button
+                type="button"
+                onClick={() => setShowQuickAddCat(!showQuickAddCat)}
+                className="text-xs text-primary-600 hover:underline flex items-center gap-1 font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" /> Kategori Baru
+              </button>
+            </div>
+
+            {showQuickAddCat && (
+              <div className="p-3 bg-gray-50 dark:bg-zinc-800/80 rounded-lg border border-gray-200 dark:border-zinc-700 space-y-2">
+                <div className="text-xs font-medium text-gray-700 dark:text-zinc-300">Buat Kategori {selectedType === 'income' ? 'Pemasukan' : 'Pengeluaran'} Baru</div>
+                <div className="flex gap-2">
+                  <Input placeholder="Emoji" value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="w-14 text-center text-sm" maxLength={4} />
+                  <Input placeholder="Nama Kategori" value={newCatName} onChange={e => setNewCatName(e.target.value)} className="flex-1 text-sm" />
+                  <Button type="button" size="sm" onClick={handleCreateQuickCategory}>Simpan</Button>
+                </div>
+              </div>
+            )}
+
             <Select value={watch('categoryId')} onValueChange={(value) => setValue('categoryId', value)}>
               <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
               <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent>

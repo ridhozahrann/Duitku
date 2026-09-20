@@ -10,13 +10,12 @@ import RecentTransactions from '@/components/dashboard/RecentTransactions'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useStore } from '@/store/useStore'
 import { formatIDR } from '@/lib/utils'
-import { defaultCategories } from '@/lib/defaultData'
 
 export default function DashboardPage() {
   const [showTx, setShowTx] = useState(false)
   const [defaultTxType, setDefaultTxType] = useState<'income' | 'expense'>('expense')
   const [balanceVisible, setBalanceVisible] = useState(true)
-  const { transactions, getBalance, getMonthlyIncome, getMonthlyExpense, budgets, bills, goals, habits, habitLogs } = useStore()
+  const { transactions, categories, getBalance, getMonthlyIncome, getMonthlyExpense, budgets, bills, goals, habits, habitLogs } = useStore()
 
   const balance = getBalance()
   const monthlyIncome = getMonthlyIncome()
@@ -82,7 +81,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0"><CardTitle className="text-sm flex items-center gap-2"><PiggyBank className="h-4 w-4" />Budget Hampir Habis</CardTitle><AlertTriangle className="h-4 w-4 text-amber-500" /></CardHeader>
               <CardContent className="space-y-2">
                 {budgetAlerts.map(b => {
-                  const cat = defaultCategories.find(c => c.id === b.categoryId)
+                  const cat = categories.find(c => c.id === b.categoryId)
                   const spent = spentByCat[b.categoryId] || 0
                   const pct = Math.min(100, (spent / b.limit) * 100)
                   return <div key={b.id} className="text-sm flex justify-between"><span>{cat?.name}</span><span className={spent > b.limit ? 'text-red-600 font-bold' : 'text-amber-600'}>{pct.toFixed(0)}%</span></div>

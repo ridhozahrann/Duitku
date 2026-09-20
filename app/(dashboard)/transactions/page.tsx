@@ -10,7 +10,6 @@ import TransactionItem from '@/components/transactions/TransactionItem'
 import TransactionDialog from '@/components/transactions/TransactionDialog'
 import { useStore } from '@/store/useStore'
 import { formatIDR } from '@/lib/utils'
-import { defaultCategories } from '@/lib/defaultData'
 import { useToast } from '@/hooks/useToast'
 
 const PAGE_SIZE = 50
@@ -37,7 +36,7 @@ export default function TransactionsPage() {
   const [monthFilter, setMonthFilter] = useState<string>('all')
   const [page, setPage] = useState(0)
   const [showDialog, setShowDialog] = useState(false)
-  const { transactions } = useStore()
+  const { transactions, categories } = useStore()
   const { toast } = useToast()
 
   const monthOptions = useMemo(() => getMonthOptions(transactions), [transactions])
@@ -53,12 +52,12 @@ export default function TransactionsPage() {
       }
       if (search) {
         const q = search.toLowerCase()
-        const cat = defaultCategories.find(c=>c.id===t.categoryId)?.name.toLowerCase() || t.categoryId.toLowerCase()
+        const cat = categories.find(c=>c.id===t.categoryId)?.name.toLowerCase() || t.categoryId.toLowerCase()
         if (!cat.includes(q) && !(t.description||'').toLowerCase().includes(q) && !String(t.amount).includes(q)) return false
       }
       return true
     })
-  }, [transactions, search, typeFilter, catFilter, monthFilter])
+  }, [transactions, categories, search, typeFilter, catFilter, monthFilter])
 
   // Reset page when filters change
   useEffect(() => { setPage(0) }, [search, typeFilter, catFilter, monthFilter])
@@ -72,7 +71,7 @@ export default function TransactionsPage() {
     if (!filtered.length) { toast({ title: 'Kosong', description: 'Tidak ada data untuk di-export', variant: 'destructive' }); return }
     const header = 'Tanggal,Tipe,Kategori,Nominal,Catatan\n'
     const rows = filtered.map(t => {
-      const cat = defaultCategories.find(c=>c.id===t.categoryId)?.name || t.categoryId
+      const cat = categories.find(c=>c.id===t.categoryId)?.name || t.categoryId
       const date = new Date(t.date).toLocaleDateString('id-ID')
       return `${date},${t.type},${cat},${t.amount},"${(t.description||'').replace(/"/g,'""')}"`
     }).join('\n')
@@ -123,7 +122,7 @@ export default function TransactionsPage() {
           <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Kategori" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua kategori</SelectItem>
-            {defaultCategories.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}
+            {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}
           </SelectContent>
         </Select>
         {hasFilter && <Button variant="ghost" onClick={resetFilters}>Reset</Button>}

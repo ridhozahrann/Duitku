@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button'
 import { TrendingUp, TrendingDown, PiggyBank } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { formatIDR } from '@/lib/utils'
-import { defaultCategories } from '@/lib/defaultData'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts'
 
 const COLORS = ['#3b82f6','#ef4444','#8b5cf6','#f59e0b','#10b981','#ec4899','#6366f1','#14b8a6']
 
 export default function AnalyticsPage() {
-  const { transactions, getMonthlyIncome, getMonthlyExpense } = useStore()
+  const { transactions, categories, getMonthlyIncome, getMonthlyExpense } = useStore()
   const [range, setRange] = useState<'7d'|'30d'|'all'>('30d')
 
   const monthlyIncome = getMonthlyIncome()
@@ -49,17 +48,17 @@ export default function AnalyticsPage() {
     const acc: Record<string, number> = {}
     filtered.forEach(t => { if (t.type === 'expense') acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount })
     return Object.entries(acc).sort(([,a],[,b]) => b - a).slice(0, 6).map(([categoryId, amount]) => {
-      const cat = defaultCategories.find(c => c.id === categoryId)
+      const cat = categories.find(c => c.id === categoryId)
       return { name: cat?.name || categoryId, value: amount }
     })
-  }, [filtered])
+  }, [filtered, categories])
 
   const topCategories = useMemo(() => {
     const acc: Record<string, number> = {}
     filtered.filter(t=>t.type==='expense').forEach(t=> acc[t.categoryId]=(acc[t.categoryId]||0)+t.amount)
     const total = Object.values(acc).reduce((a,b)=>a+b,0)
-    return Object.entries(acc).sort(([,a],[,b])=>b-a).slice(0,5).map(([id, amount])=>({ categoryId: id, amount, percentage: total? amount/total*100 : 0, name: defaultCategories.find(c=>c.id===id)?.name || id }))
-  }, [filtered])
+    return Object.entries(acc).sort(([,a],[,b])=>b-a).slice(0,5).map(([id, amount])=>({ categoryId: id, amount, percentage: total? amount/total*100 : 0, name: categories.find(c=>c.id===id)?.name || id }))
+  }, [filtered, categories])
 
   return (
     <div className="py-6 space-y-6">

@@ -5,13 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { useStore } from '@/store/useStore'
 import { formatIDR } from '@/lib/utils'
-import { defaultCategories } from '@/lib/defaultData'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Target, Wallet, Flame } from 'lucide-react'
 
 export default function InsightsPage() {
-  const { transactions, budgets, bills, goals } = useStore()
+  const { transactions, categories, budgets, bills, goals } = useStore()
 
   const insights = useMemo(() => {
     const now = new Date()
@@ -41,13 +40,13 @@ export default function InsightsPage() {
     const byCat: Record<string, number> = {}
     monthlyTx.filter(t => t.type === 'expense').forEach(t => { byCat[t.categoryId] = (byCat[t.categoryId] || 0) + t.amount })
     const topCatEntry = Object.entries(byCat).sort(([, a], [, b]) => b - a)[0]
-    const topCat = topCatEntry ? { id: topCatEntry[0], amount: topCatEntry[1], name: defaultCategories.find(c => c.id === topCatEntry[0])?.name || topCatEntry[0] } : null
+    const topCat = topCatEntry ? { id: topCatEntry[0], amount: topCatEntry[1], name: categories.find(c => c.id === topCatEntry[0])?.name || topCatEntry[0] } : null
 
     // budget overruns
     const overBudgets = budgets.filter(b => (byCat[b.categoryId] || 0) > b.limit).map(b => ({
       ...b,
       spent: byCat[b.categoryId] || 0,
-      name: defaultCategories.find(c => c.id === b.categoryId)?.name || b.categoryId,
+      name: categories.find(c => c.id === b.categoryId)?.name || b.categoryId,
     }))
 
     // bills due soon
@@ -108,7 +107,7 @@ export default function InsightsPage() {
           <CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5" />Sorotan</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between"><span>Kategori terbesar bulan ini</span><span className="font-medium">{insights.topCat ? `${insights.topCat.name} • ${formatIDR(insights.topCat.amount)}` : '-'}</span></div>
-            <div className="flex justify-between"><span>Transaksi terbesar</span><span className="font-medium">{insights.biggest ? `${formatIDR(insights.biggest.amount)} • ${defaultCategories.find(c=>c.id===insights.biggest.categoryId)?.name || insights.biggest.categoryId}` : '-'}</span></div>
+            <div className="flex justify-between"><span>Transaksi terbesar</span><span className="font-medium">{insights.biggest ? `${formatIDR(insights.biggest.amount)} • ${categories.find(c=>c.id===insights.biggest.categoryId)?.name || insights.biggest.categoryId}` : '-'}</span></div>
             <div className="flex justify-between"><span>Budget jebol</span>{insights.overBudgets.length ? <Badge variant="destructive">{insights.overBudgets.length}</Badge> : <Badge variant="outline">0</Badge>}</div>
             <div className="flex justify-between"><span>Tagihan belum lunas</span><Badge variant={insights.unpaid ? 'destructive' : 'outline'}>{insights.unpaid}</Badge></div>
             {insights.goalsProgress.length > 0 && (

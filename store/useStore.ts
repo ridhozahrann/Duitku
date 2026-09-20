@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { Transaction, Category, Wallet, Bill, Habit, HabitLog, Budget, SavingsGoal } from '@/types'
 import { defaultCategories } from '@/lib/defaultData'
 import { createClient } from '@/lib/supabase/client'
-import { walletToRow, txToRow, billToRow, habitToRow, budgetToRow, goalToRow } from '@/lib/supabase/mappers'
+import { walletToRow, txToRow, billToRow, habitToRow, budgetToRow, goalToRow, categoryToRow, rowToCategory } from '@/lib/supabase/mappers'
 
 interface Store {
   transactions: Transaction[]
@@ -38,8 +38,8 @@ interface Store {
   updateGoal: (id: string, g: Partial<SavingsGoal>) => void
   deleteGoal: (id: string) => void
   restoreData: (data: { transactions?: Transaction[]; wallets?: Wallet[]; bills?: Bill[]; categories?: Category[]; habits?: Habit[]; habitLogs?: HabitLog[]; budgets?: Budget[]; goals?: SavingsGoal[] }) => void
-  hydrateCloud: (data: { transactions: Transaction[]; wallets: Wallet[]; bills: Bill[]; habits: Habit[]; habitLogs: HabitLog[]; budgets: Budget[]; goals: SavingsGoal[] }) => void
-  mergeCloud: (data: { transactions: Transaction[]; wallets: Wallet[]; bills: Bill[]; habits: Habit[]; habitLogs: HabitLog[]; budgets: Budget[]; goals: SavingsGoal[] }) => void
+  hydrateCloud: (data: { transactions: Transaction[]; wallets: Wallet[]; bills: Bill[]; habits: Habit[]; habitLogs: HabitLog[]; budgets: Budget[]; goals: SavingsGoal[]; categories?: Category[] }) => void
+  mergeCloud: (data: { transactions: Transaction[]; wallets: Wallet[]; bills: Bill[]; habits: Habit[]; habitLogs: HabitLog[]; budgets: Budget[]; goals: SavingsGoal[]; categories?: Category[] }) => void
   clearAll: () => void
   getBalance: () => number
   getMonthlyIncome: () => number
@@ -190,9 +190,20 @@ export const useStore = create<Store>()((set, get) => ({
         set((state) => ({ wallets: state.wallets.filter((w) => w.id !== id) }))
         cloudDelete('wallets', id)
       },
-      addCategory: (category) => { set((state) => ({ categories: [...state.categories, category] })) },
-      updateCategory: (id, category) => { set((state) => ({ categories: state.categories.map((c) => c.id === id ? { ...c, ...category } : c) })) },
-      deleteCategory: (id) => { set((state) => ({ categories: state.categories.filter((c) => c.id !== id) })) },
+      addCategory: (category) => {
+        const id = category.id || generateId()
+        const newCat = { ...category, id }
+        set((state) => ({ categories: [...state.categories.filter(c => c.id !== id), newCat] }))
+        void getCloud().then(c => { if (!c) return; c.supabase.from('categories').upsert(categoryToRow(newCat, c.userId)).then(() => {}) })
+      },
+      updateCategory: (id, category) => {
+        set((state) => ({ categories: state.categories.map((c) => c.id === id ? { ...c, ...category } : c) }))
+        void getCloud().then(c => { if (!c) return; const cur = get().categories.find(x => x.id === id); if (cur) c.supabase.from('categories').upsert(categoryToRow(cur, c.userId)).then(() => {}) })
+      },
+      deleteCategory: (id) => {
+        set((state) => ({ categories: state.categories.filter((c) => c.id !== id) }))
+        cloudDelete('categories', id)
+      },
       addBill: (bill) => {
         const id = generateId()
         const now = new Date()
@@ -279,6 +290,7 @@ export const useStore = create<Store>()((set, get) => ({
           habitLogs: data.habitLogs,
           budgets: data.budgets,
           goals: data.goals.map(reviveGoal),
+          categories: data.categories?.length ? data.categories : get().categories,
         })
       },
       mergeCloud: (data) => {
@@ -296,6 +308,7 @@ export const useStore = create<Store>()((set, get) => ({
           habitLogs: data.habitLogs,
           budgets: data.budgets,
           goals: data.goals.map(reviveGoal),
+          categories: data.categories?.length ? data.categories : get().categories,
         })
       },
       clearAll: () => {

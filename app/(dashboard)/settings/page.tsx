@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut, Layout, PanelLeft, PanelBottom } from 'lucide-react'
+import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut, Layout, PanelLeft, PanelBottom, Tag } from 'lucide-react'
+import CategoryManager from '@/components/categories/CategoryManager'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -131,6 +132,16 @@ export default function SettingsPage() {
               <div className="text-xs text-gray-500 mt-1">Menu di bawah layar untuk semua perangkat</div>
             </div>
           </button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Tag className="h-5 w-5" />Kelola Kategori</CardTitle>
+          <CardDescription>Tambah kategori baru secara manual atau hapus kategori yang tidak dibutuhkan</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CategoryManager />
         </CardContent>
       </Card>
 
