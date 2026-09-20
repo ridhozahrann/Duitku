@@ -14,7 +14,7 @@ import { CurrencyInput } from '@/components/ui/currency-input'
 import { useToast } from '@/hooks/useToast'
 
 export default function WalletsPage() {
-  const { wallets, addWallet, deleteWallet, transferWallet } = useStore()
+  const { wallets, addWallet, deleteWallet, transferWallet, isBalanceHidden } = useStore()
   const { toast } = useToast()
   const [showAdd, setShowAdd] = useState(false)
   const [showTransfer, setShowTransfer] = useState(false)
@@ -68,7 +68,7 @@ export default function WalletsPage() {
           <div className="text-center">
             <div className="inline-flex items-center justify-center h-12 w-12 bg-primary-100 text-primary-600 rounded-full mb-4"><WalletIcon className="h-6 w-6" /></div>
             <p className="text-sm text-gray-600 dark:text-zinc-400 mb-1">Total Saldo Semua Kantong</p>
-            <div className="text-3xl font-bold text-primary-700 dark:text-zinc-100">{formatIDR(totalBalance)}</div>
+            <div className="text-3xl font-bold text-primary-700 dark:text-zinc-100">{formatIDR(totalBalance, isBalanceHidden)}</div>
           </div>
         </CardContent>
       </Card>
@@ -88,7 +88,7 @@ export default function WalletsPage() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{formatIDR(wallet.balance)}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{formatIDR(wallet.balance, isBalanceHidden)}</div>
                   <p className="text-sm text-gray-500">Saldo saat ini</p>
                 </div>
                 {wallet.budgetLimit ? (

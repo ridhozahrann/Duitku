@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut, Layout, PanelLeft, PanelBottom, Tag } from 'lucide-react'
+import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut, Layout, PanelLeft, PanelBottom, Tag, Palette, Check, Eye, EyeOff } from 'lucide-react'
 import CategoryManager from '@/components/categories/CategoryManager'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -14,7 +14,7 @@ import { triggerCloudSync } from '@/hooks/useCloudSync'
 import { useAuth } from '@/components/AuthProvider'
 
 export default function SettingsPage() {
-  const { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, restoreData, clearAll, navPosition, setNavPosition } = useStore()
+  const { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, restoreData, clearAll, navPosition, setNavPosition, accentColor, setAccentColor, isBalanceHidden, toggleBalanceHidden } = useStore()
   const { user, signOut } = useAuth()
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -132,6 +132,78 @@ export default function SettingsPage() {
               <div className="text-xs text-gray-500 mt-1">Menu di bawah layar untuk semua perangkat</div>
             </div>
           </button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" />Warna Aksen Tema</CardTitle>
+          <CardDescription>Pilih warna tema utama untuk tombol, badge, dan elemen aktif</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {[
+              { id: 'emerald', label: 'Emerald', bg: 'bg-emerald-600' },
+              { id: 'indigo', label: 'Indigo', bg: 'bg-indigo-600' },
+              { id: 'violet', label: 'Violet', bg: 'bg-violet-600' },
+              { id: 'rose', label: 'Rose', bg: 'bg-rose-600' },
+              { id: 'amber', label: 'Amber', bg: 'bg-amber-600' },
+              { id: 'teal', label: 'Teal', bg: 'bg-teal-600' },
+            ].map((c) => {
+              const active = accentColor === c.id || (!accentColor && c.id === 'emerald')
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    setAccentColor(c.id as any)
+                    toast({ title: 'Tema diperbarui', description: `Warna aksen diubah ke ${c.label}`, variant: 'success' })
+                  }}
+                  className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
+                    active ? 'border-primary-600 bg-primary-50/40 dark:bg-primary-950/20 shadow-sm' : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`h-7 w-7 rounded-full ${c.bg} flex items-center justify-center text-white shadow-sm`}>
+                    {active && <Check className="h-4 w-4" />}
+                  </div>
+                  <span className="text-xs font-medium text-gray-800 dark:text-zinc-200">{c.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {!isBalanceHidden ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5 text-amber-500" />} Penyamaran Saldo Global
+          </CardTitle>
+          <CardDescription>Sembunyikan nominal angka saldo dan uang di seluruh halaman</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="font-medium text-sm text-gray-900 dark:text-zinc-100">
+              {isBalanceHidden ? 'Status: Tersembunyi (•••••••)' : 'Status: Tampil Publik'}
+            </div>
+            <div className="text-xs text-gray-500 mt-0.5">
+              Cocok saat menggunakan aplikasi di area umum atau keramaian
+            </div>
+          </div>
+          <Button
+            variant={isBalanceHidden ? 'default' : 'outline'}
+            onClick={() => {
+              toggleBalanceHidden()
+              toast({
+                title: !isBalanceHidden ? 'Saldo Tersembunyi' : 'Saldo Ditampilkan',
+                description: !isBalanceHidden ? 'Semua angka saldo kini disamarkan' : 'Angka saldo ditampilkan kembali',
+                variant: 'success'
+              })
+            }}
+          >
+            {!isBalanceHidden ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+            {!isBalanceHidden ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
+          </Button>
         </CardContent>
       </Card>
 

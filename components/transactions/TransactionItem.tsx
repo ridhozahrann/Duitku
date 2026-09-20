@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Edit, Trash2, MoreVertical } from 'lucide-react'
 import { Transaction } from '@/types'
-import { defaultCategories } from '@/lib/defaultData'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { formatIDR, formatRelativeTime, formatTime } from '@/lib/utils'
@@ -13,10 +12,10 @@ import TransactionDialog from './TransactionDialog'
 
 export default function TransactionItem({ transaction, showTime = false }: { transaction: Transaction; showTime?: boolean }) {
   const { toast } = useToast()
-  const { deleteTransaction } = useStore()
+  const { deleteTransaction, categories, isBalanceHidden } = useStore()
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
-  const category = defaultCategories.find(c => c.id === transaction.categoryId)
+  const category = categories.find(c => c.id === transaction.categoryId)
 
   const handleDelete = async () => {
     if (!confirm('Hapus transaksi ini?')) return
@@ -39,7 +38,7 @@ export default function TransactionItem({ transaction, showTime = false }: { tra
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div><h4 className="font-medium text-gray-900 dark:text-zinc-100 truncate">{category?.name || 'Lainnya'}</h4>{transaction.description && <p className="text-sm text-gray-500 truncate">{transaction.description}</p>}</div>
-              <div className={`font-semibold ${transaction.type === 'income' ? 'text-income-600' : 'text-expense-600'}`}>{transaction.type === 'income' ? '+' : '-'}{formatIDR(transaction.amount)}</div>
+              <div className={`font-semibold ${transaction.type === 'income' ? 'text-income-600' : 'text-expense-600'}`}>{transaction.type === 'income' ? '+' : '-'}{formatIDR(transaction.amount, isBalanceHidden)}</div>
             </div>
             <div className="text-xs text-gray-500">{formatRelativeTime(new Date(transaction.date))}{showTime && ` • ${formatTime(new Date(transaction.date))}`}</div>
           </div>

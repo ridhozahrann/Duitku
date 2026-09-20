@@ -11,7 +11,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isLoading, isSyncing, navPosition, setNavPosition } = useStore()
+  const { isLoading, isSyncing, navPosition, setNavPosition, setAccentColor, setBalanceHidden } = useStore()
   useCloudSync()
 
   useEffect(() => {
@@ -19,7 +19,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (saved && (saved === 'sidebar' || saved === 'bottom')) {
       setNavPosition(saved)
     }
-  }, [setNavPosition])
+
+    const savedColor = localStorage.getItem('duitku_accent_color') as any
+    if (savedColor) {
+      setAccentColor(savedColor)
+      document.documentElement.setAttribute('data-theme', savedColor)
+    }
+
+    const savedHidden = localStorage.getItem('duitku_balance_hidden')
+    if (savedHidden !== null) {
+      setBalanceHidden(savedHidden === 'true')
+    }
+  }, [setNavPosition, setAccentColor, setBalanceHidden])
 
   const isSidebar = navPosition === 'sidebar'
 

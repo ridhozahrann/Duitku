@@ -14,8 +14,7 @@ import { formatIDR } from '@/lib/utils'
 export default function DashboardPage() {
   const [showTx, setShowTx] = useState(false)
   const [defaultTxType, setDefaultTxType] = useState<'income' | 'expense'>('expense')
-  const [balanceVisible, setBalanceVisible] = useState(true)
-  const { transactions, categories, getBalance, getMonthlyIncome, getMonthlyExpense, budgets, bills, goals, habits, habitLogs } = useStore()
+  const { transactions, categories, getBalance, getMonthlyIncome, getMonthlyExpense, budgets, bills, goals, habits, habitLogs, isBalanceHidden, toggleBalanceHidden } = useStore()
 
   const balance = getBalance()
   const monthlyIncome = getMonthlyIncome()
@@ -56,9 +55,11 @@ export default function DashboardPage() {
           <ThemeToggle />
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-zinc-400">Saldo Saat Ini</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{balanceVisible ? formatIDR(balance) : '•••••••'}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{formatIDR(balance, isBalanceHidden)}</div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setBalanceVisible(!balanceVisible)}>{balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" opacity={0.6} />}</Button>
+          <Button variant="ghost" size="icon" onClick={toggleBalanceHidden} title={isBalanceHidden ? 'Tampilkan Saldo' : 'Sembunyikan Saldo'}>
+            {!isBalanceHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-gray-400" />}
+          </Button>
         </div>
       </div>
 
@@ -68,9 +69,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Pemasukan Bulan Ini</CardTitle><TrendingUp className="h-4 w-4 text-income-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-income-600">{formatIDR(monthlyIncome)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Pengeluaran Bulan Ini</CardTitle><TrendingDown className="h-4 w-4 text-expense-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-expense-600">{formatIDR(monthlyExpense)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Sisa Saldo</CardTitle><Wallet className="h-4 w-4 text-primary-500" /></CardHeader><CardContent><div className={`text-2xl font-bold ${remaining >= 0 ? 'text-primary-600' : 'text-expense-600'}`}>{formatIDR(remaining)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Pemasukan Bulan Ini</CardTitle><TrendingUp className="h-4 w-4 text-income-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-income-600">{formatIDR(monthlyIncome, isBalanceHidden)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Pengeluaran Bulan Ini</CardTitle><TrendingDown className="h-4 w-4 text-expense-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-expense-600">{formatIDR(monthlyExpense, isBalanceHidden)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Sisa Saldo</CardTitle><Wallet className="h-4 w-4 text-primary-500" /></CardHeader><CardContent><div className={`text-2xl font-bold ${remaining >= 0 ? 'text-primary-600' : 'text-expense-600'}`}>{formatIDR(remaining, isBalanceHidden)}</div></CardContent></Card>
       </div>
 
       {/* Phase 3 widgets */}

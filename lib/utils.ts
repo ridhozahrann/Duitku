@@ -5,7 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatIDR(amount: number): string {
+export function formatIDR(amount: number, isHidden?: boolean): string {
+  if (isHidden) return 'Rp •••••••'
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

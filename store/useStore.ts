@@ -48,6 +48,11 @@ interface Store {
   getTransactionsByCategory: (categoryId: string) => Transaction[]
   navPosition: 'sidebar' | 'bottom'
   setNavPosition: (pos: 'sidebar' | 'bottom') => void
+  isBalanceHidden: boolean
+  setBalanceHidden: (hidden: boolean) => void
+  toggleBalanceHidden: () => void
+  accentColor: 'emerald' | 'indigo' | 'violet' | 'rose' | 'amber' | 'teal'
+  setAccentColor: (color: 'emerald' | 'indigo' | 'violet' | 'rose' | 'amber' | 'teal') => void
   isLoading: boolean
   isSyncing: boolean
   setLoading: (loading: boolean) => void
@@ -109,6 +114,28 @@ export const useStore = create<Store>()((set, get) => ({
         set({ navPosition: pos })
         if (typeof window !== 'undefined') {
           localStorage.setItem('duitku_nav_position', pos)
+        }
+      },
+      isBalanceHidden: false,
+      setBalanceHidden: (hidden) => {
+        set({ isBalanceHidden: hidden })
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('duitku_balance_hidden', hidden ? 'true' : 'false')
+        }
+      },
+      toggleBalanceHidden: () => {
+        const next = !get().isBalanceHidden
+        set({ isBalanceHidden: next })
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('duitku_balance_hidden', next ? 'true' : 'false')
+        }
+      },
+      accentColor: 'emerald',
+      setAccentColor: (color) => {
+        set({ accentColor: color })
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('duitku_accent_color', color)
+          document.documentElement.setAttribute('data-theme', color)
         }
       },
 
