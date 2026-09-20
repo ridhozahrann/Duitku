@@ -9,7 +9,7 @@ import TransactionDialog from '@/components/transactions/TransactionDialog'
 import RecentTransactions from '@/components/dashboard/RecentTransactions'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useStore } from '@/store/useStore'
-import { formatIDR, isBillDue } from '@/lib/utils'
+import { formatIDR, isBillDueForCurrentMonth } from '@/lib/utils'
 
 export default function DashboardPage() {
   const [showTx, setShowTx] = useState(false)
@@ -29,8 +29,8 @@ export default function DashboardPage() {
     return m
   }, [transactions, startOfMonth])
   const budgetAlerts = budgets.filter(b => (spentByCat[b.categoryId] || 0) >= b.limit * 0.8).slice(0, 2)
-  const unpaidBills = bills.filter(b => isBillDue(b)).length
-  const nextBill = bills.filter(b => isBillDue(b)).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
+  const unpaidBills = bills.filter(b => isBillDueForCurrentMonth(b)).length
+  const nextBill = bills.filter(b => isBillDueForCurrentMonth(b)).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]
   const topGoal = goals.slice().sort((a, b) => (b.current / b.target) - (a.current / a.target))[0]
   const streak = useMemo(() => {
     const set = new Set(habitLogs.map(l => l.date))

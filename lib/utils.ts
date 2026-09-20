@@ -32,6 +32,15 @@ export function isBillDue(bill: Bill, today = new Date()): boolean {
   return !isBillPaidThisCycle(bill, today)
 }
 
+export function isBillDueForCurrentMonth(bill: Bill, today = new Date()): boolean {
+  if (!isBillDue(bill, today)) return false
+  const d = new Date(bill.dueDate)
+  const isPastOrCurrentMonth = 
+    d.getFullYear() < today.getFullYear() ||
+    (d.getFullYear() === today.getFullYear() && d.getMonth() <= today.getMonth())
+  return isPastOrCurrentMonth
+}
+
 export function formatIDR(amount: number, isHidden?: boolean): string {
   if (isHidden) return 'Rp •••••••'
   return new Intl.NumberFormat('id-ID', {
