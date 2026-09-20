@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Target, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,7 +46,7 @@ export default function GoalsPage() {
   return (
     <div className="py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Target Nabung 🎯</h1><p className="text-gray-600 dark:text-zinc-400">{formatIDR(totalCurrent)} / {formatIDR(totalTarget)} terkumpul</p></div>
+        <div><h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Target Nabung</h1><p className="text-gray-600 dark:text-zinc-400">{formatIDR(totalCurrent)} / {formatIDR(totalTarget)} terkumpul</p></div>
         <Button onClick={()=>setShowAdd(true)}>+ Buat Target</Button>
       </div>
 
@@ -65,7 +66,7 @@ export default function GoalsPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden"><div className={`h-full ${done?'bg-green-500':'bg-primary-500'}`} style={{width:`${pct}%`}} /></div>
-                  {done ? <p className="text-sm text-green-600 font-medium">Tercapai! 🎉</p> : <p className="text-sm text-gray-500">Sisa {formatIDR(g.target - g.current)}</p>}
+                  {done ? <p className="text-sm text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="h-4 w-4" />Tercapai!</p> : <p className="text-sm text-gray-500">Sisa {formatIDR(g.target - g.current)}</p>}
                   <div className="flex gap-2">
                     {topUpId===g.id ? (
                       <>
@@ -87,7 +88,7 @@ export default function GoalsPage() {
         </div>
       ) : (
         <Card><CardContent className="pt-6 text-center py-12">
-          <div className="text-4xl mb-3">🎯</div><h3 className="font-medium mb-2">Belum ada target</h3><p className="text-gray-500 mb-4 text-sm">Buat target nabung: HP baru, liburan, dana darurat</p>
+          <Target className="h-10 w-10 text-primary-500 mx-auto mb-3" /><h3 className="font-medium mb-2">Belum ada target</h3><p className="text-gray-500 mb-4 text-sm">Buat target nabung: HP baru, liburan, dana darurat</p>
           <Button onClick={()=>setShowAdd(true)}>+ Buat Target Pertama</Button>
         </CardContent></Card>
       )}

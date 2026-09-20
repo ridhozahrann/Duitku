@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useState, useMemo } from 'react'
+import { Flame } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -61,7 +62,7 @@ export default function HabitsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Streak</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">🔥 {streak} hari</div><p className="text-sm text-gray-500">Hari berturut catat kebiasaan</p></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Streak</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold flex items-center gap-1.5"><Flame className="h-6 w-6 text-orange-500 inline" /> {streak} hari</div><p className="text-sm text-gray-500">Hari berturut catat kebiasaan</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Minggu Ini</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{weeklyLogs} cek</div><p className="text-sm text-gray-500">Total cek 7 hari terakhir</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Catat Transaksi</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{txDays.size} hari</div><p className="text-sm text-gray-500">Hari berbeda ada transaksi</p></CardContent></Card>
       </div>

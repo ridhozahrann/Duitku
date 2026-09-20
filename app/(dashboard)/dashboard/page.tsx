@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Wallet, TrendingUp, TrendingDown, Calendar, AlertTriangle, Target, Flame, PiggyBank } from 'lucide-react'
+import { Wallet, TrendingUp, TrendingDown, Calendar, AlertTriangle, Target, Flame, PiggyBank, Eye, EyeOff } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import TransactionDialog from '@/components/transactions/TransactionDialog'
@@ -50,7 +50,7 @@ export default function DashboardPage() {
     <div className="py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Selamat datang 👋</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Selamat datang</h1>
           <p className="text-gray-600 dark:text-zinc-400">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ export default function DashboardPage() {
             <div className="text-sm text-gray-500 dark:text-zinc-400">Saldo Saat Ini</div>
             <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">{balanceVisible ? formatIDR(balance) : '•••••••'}</div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setBalanceVisible(!balanceVisible)}>{balanceVisible ? '👁️' : '👁️‍🗨️'}</Button>
+          <Button variant="ghost" size="icon" onClick={() => setBalanceVisible(!balanceVisible)}>{balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" opacity={0.6} />}</Button>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export default function DashboardPage() {
           {habits.length > 0 && (
             <Link href="/habits"><Card className="hover:shadow-md transition cursor-pointer h-full">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0"><CardTitle className="text-sm flex items-center gap-2"><Flame className="h-4 w-4 text-orange-500" />Streak Kebiasaan</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold">🔥 {streak} hari</div><p className="text-xs text-gray-500">{habits.length} kebiasaan aktif</p></CardContent>
+              <CardContent><div className="text-2xl font-bold flex items-center gap-1.5"><Flame className="h-5 w-5 text-orange-500 inline" /> {streak} hari</div><p className="text-xs text-gray-500">{habits.length} kebiasaan aktif</p></CardContent>
             </Card></Link>
           )}
         </div>

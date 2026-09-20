@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, PiggyBank } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { formatIDR } from '@/lib/utils'
 import { defaultCategories } from '@/lib/defaultData'
@@ -77,7 +77,7 @@ export default function AnalyticsPage() {
           <CardContent><div className="text-2xl font-bold text-income-600">{formatIDR(filtered.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0))}</div><p className="text-sm text-gray-500 mt-1">{range==='all'?'Semua waktu':range}</p></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle><TrendingDown className="h-4 w-4 text-expense-500" /></CardHeader>
           <CardContent><div className="text-2xl font-bold text-expense-600">{formatIDR(filtered.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0))}</div><p className="text-sm text-gray-500 mt-1">{range==='all'?'Semua waktu':range}</p></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Rasio Tabungan</CardTitle><div className="h-4 w-4">💰</div></CardHeader>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Rasio Tabungan</CardTitle><PiggyBank className="h-4 w-4 text-primary-500" /></CardHeader>
           <CardContent><div className="text-2xl font-bold text-primary-600">{savingsRate.toFixed(1)}%</div><p className="text-sm text-gray-500 mt-1">Bulan ini</p></CardContent></Card>
       </div>
 

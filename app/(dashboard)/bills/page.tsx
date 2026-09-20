@@ -177,14 +177,14 @@ export default function BillsPage() {
       })
 
       toast({
-        title: 'Lunas & Dicatat ke Transaksi! 🎉',
+        title: 'Lunas & Dicatat ke Transaksi',
         description: `${bill.name} lunas bulan ini. Pembayaran selanjutnya: ${formatDate(nextDate)}`,
         variant: 'success',
       })
     } else {
       updateBill(bill.id, { status: 'paid' })
       toast({
-        title: 'Lunas & Dicatat ke Transaksi! 🎉',
+        title: 'Lunas & Dicatat ke Transaksi',
         description: `Tagihan ${bill.name} ditandai lunas`,
         variant: 'success',
       })
@@ -209,10 +209,10 @@ export default function BillsPage() {
     if (bill.status === 'paused') {
       const newStatus = isOverdue(new Date(bill.dueDate)) ? 'overdue' : 'unpaid'
       updateBill(bill.id, { status: newStatus })
-      toast({ title: 'Tagihan Diaktifkan ▶️', description: `${bill.name} aktif kembali.`, variant: 'success' })
+      toast({ title: 'Tagihan Diaktifkan', description: `${bill.name} aktif kembali.`, variant: 'success' })
     } else {
       updateBill(bill.id, { status: 'paused' })
-      toast({ title: 'Tagihan Di-pause ⏸️', description: `${bill.name} di-pause (libur semester).`, variant: 'default' })
+      toast({ title: 'Tagihan Di-pause', description: `${bill.name} di-pause (libur semester).`, variant: 'default' })
     }
   }
 
@@ -348,7 +348,7 @@ export default function BillsPage() {
             })}
           </div>
         ) : (
-          <Card><CardContent className="pt-6 text-center py-8 text-gray-500">🎉 Semua tagihan periode ini sudah lunas!</CardContent></Card>
+          <Card><CardContent className="pt-6 text-center py-8 text-gray-500">Semua tagihan periode ini sudah lunas</CardContent></Card>
         )}
       </div>
 
@@ -371,7 +371,7 @@ export default function BillsPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-base text-gray-900 dark:text-zinc-100">{bill.name}</h3>
                           <Badge className="bg-green-600 text-white hover:bg-green-700">
-                            ✓ Lunas Bulan Ini
+                            Lunas Bulan Ini
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
                             {getRecurrenceLabel(bill.recurrence)}
@@ -423,7 +423,7 @@ export default function BillsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-gray-900 dark:text-zinc-100">{bill.name}</h4>
-                        <Badge variant="outline" className="text-amber-700 border-amber-300">⏸️ Di-pause</Badge>
+                        <Badge variant="outline" className="text-amber-700 border-amber-300">Di-pause</Badge>
                         <Badge variant="secondary" className="text-xs">{getRecurrenceLabel(bill.recurrence)}</Badge>
                       </div>
                       <p className="text-sm text-gray-500 mt-0.5">{formatIDR(bill.amount)} • Terakhir jatuh tempo: {formatDate(new Date(bill.dueDate))}</p>
