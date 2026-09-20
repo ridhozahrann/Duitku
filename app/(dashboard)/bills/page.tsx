@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
-import { formatIDR, formatDate, parseThousands } from '@/lib/utils'
+import { formatIDR, formatDate, parseThousands, isBillDue, isBillPaidThisCycle } from '@/lib/utils'
 import { CurrencyInput } from '@/components/ui/currency-input'
 import { useStore } from '@/store/useStore'
 import { useToast } from '@/hooks/useToast'
@@ -71,25 +71,11 @@ export default function BillsPage() {
   // Tagihan sekali bayar yang sudah lunas
   const paidOnceBills = bills.filter(b => b.status === 'paid')
 
-  // Tagihan berulang yang tanggal jatuh temponya masih di MASA DEPAN (berarti siklus bulan ini sudah lunas)
-  const paidThisCycleBills = bills.filter(b => {
-    if (b.status === 'paused' || b.status === 'paid') return false
-    if (!b.recurrence || b.recurrence === 'once') return false
-    const d = new Date(b.dueDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return d.getTime() > today.getTime()
-  })
+  // Tagihan berulang yang sudah dibayar pada siklus ini
+  const paidThisCycleBills = bills.filter(b => isBillPaidThisCycle(b))
 
-  // Tagihan yang perlu dibayar sekarang (jatuh tempo hari ini atau sudah lewat)
-  const dueBills = bills.filter(b => {
-    if (b.status === 'paused' || b.status === 'paid') return false
-    if (!b.recurrence || b.recurrence === 'once') return true
-    const d = new Date(b.dueDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return d.getTime() <= today.getTime()
-  })
+  // Tagihan yang perlu dibayar sekarang (jatuh tempo hari ini atau belum dibayar pada siklus ini)
+  const dueBills = bills.filter(b => isBillDue(b))
 
   const overdueBills = dueBills.filter(b => isOverdue(b.dueDate))
   const totalActiveDue = dueBills.reduce((s, b) => s + b.amount, 0)
@@ -174,6 +160,7 @@ export default function BillsPage() {
       updateBill(bill.id, {
         dueDate: nextDate,
         status: 'unpaid',
+        lastPaidAt: new Date(),
       })
 
       toast({
@@ -182,7 +169,7 @@ export default function BillsPage() {
         variant: 'success',
       })
     } else {
-      updateBill(bill.id, { status: 'paid' })
+      updateBill(bill.id, { status: 'paid', lastPaidAt: new Date() })
       toast({
         title: 'Lunas & Dicatat ke Transaksi',
         description: `Tagihan ${bill.name} ditandai lunas`,
@@ -197,10 +184,11 @@ export default function BillsPage() {
       updateBill(bill.id, {
         dueDate: prevDate,
         status: isOverdue(prevDate) ? 'overdue' : 'unpaid',
+        lastPaidAt: undefined,
       })
       toast({ title: 'Status Di-reset', description: `Tagihan ${bill.name} kembali ke jatuh tempo ${formatDate(prevDate)}` })
     } else {
-      updateBill(bill.id, { status: 'unpaid' })
+      updateBill(bill.id, { status: 'unpaid', lastPaidAt: undefined })
       toast({ title: 'Batal Lunas', description: `Tagihan ${bill.name} kembali belum lunas` })
     }
   }

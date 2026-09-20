@@ -1,8 +1,35 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { Bill } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+export function isBillPaidThisCycle(bill: Bill, today = new Date()): boolean {
+  if (bill.status === 'paid') return true
+  if (bill.status === 'paused') return false
+  if (!bill.recurrence || bill.recurrence === 'once') return false
+  if (!bill.lastPaidAt) return false
+  
+  const lastPaid = new Date(bill.lastPaidAt)
+  if (bill.recurrence === 'monthly') {
+    return lastPaid.getMonth() === today.getMonth() && lastPaid.getFullYear() === today.getFullYear()
+  }
+  if (bill.recurrence === 'weekly') {
+    const diffDays = (today.getTime() - lastPaid.getTime()) / (1000 * 60 * 60 * 24)
+    return diffDays < 7
+  }
+  if (bill.recurrence === 'yearly') {
+    return lastPaid.getFullYear() === today.getFullYear()
+  }
+  return false
+}
+
+export function isBillDue(bill: Bill, today = new Date()): boolean {
+  if (bill.status === 'paused' || bill.status === 'paid') return false
+  if (!bill.recurrence || bill.recurrence === 'once') return true
+  return !isBillPaidThisCycle(bill, today)
 }
 
 export function formatIDR(amount: number, isHidden?: boolean): string {

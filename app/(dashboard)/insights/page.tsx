@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useStore } from '@/store/useStore'
-import { formatIDR } from '@/lib/utils'
+import { formatIDR, isBillDue } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Target, Wallet, Flame } from 'lucide-react'
@@ -50,7 +50,7 @@ export default function InsightsPage() {
     }))
 
     // bills due soon
-    const unpaid = bills.filter(b => b.status !== 'paid').length
+    const unpaid = bills.filter(b => isBillDue(b)).length
 
     // runway
     const burnRate = avgDaily || 1

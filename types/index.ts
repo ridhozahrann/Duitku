@@ -41,6 +41,7 @@ export interface Bill {
   recurrence?: 'once' | 'weekly' | 'monthly' | 'yearly'
   status: 'paid' | 'unpaid' | 'overdue' | 'paused'
   notes?: string
+  lastPaidAt?: Date
   createdAt: Date
   updatedAt: Date
 }

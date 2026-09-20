@@ -276,7 +276,7 @@ export const useStore = create<Store>()((set, get) => ({
       deleteGoal: (id) => { set((s) => ({ goals: s.goals.filter((x) => x.id !== id) })); cloudDelete('savings_goals', id) },
       restoreData: (data) => {
         const reviveTx = (t: Transaction) => ({ ...t, date: toDate(t.date), createdAt: toDate(t.createdAt), updatedAt: toDate(t.updatedAt) })
-        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
+        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), lastPaidAt: b.lastPaidAt ? toDate(b.lastPaidAt) : undefined, createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
         const reviveWallet = (w: Wallet) => ({ ...w, createdAt: toDate(w.createdAt), updatedAt: toDate(w.updatedAt) })
         const reviveHabit = (h: Habit) => ({ ...h, createdAt: toDate(h.createdAt) })
         const reviveGoal = (g: SavingsGoal) => ({ ...g, deadline: g.deadline ? toDate(g.deadline) : undefined, createdAt: toDate(g.createdAt) })
@@ -305,7 +305,7 @@ export const useStore = create<Store>()((set, get) => ({
       },
       hydrateCloud: (data) => {
         const reviveTx = (t: Transaction) => ({ ...t, date: toDate(t.date), createdAt: toDate(t.createdAt), updatedAt: toDate(t.updatedAt) })
-        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
+        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), lastPaidAt: b.lastPaidAt ? toDate(b.lastPaidAt) : undefined, createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
         const reviveWallet = (w: Wallet) => ({ ...w, createdAt: toDate(w.createdAt), updatedAt: toDate(w.updatedAt) })
         const reviveHabit = (h: Habit) => ({ ...h, createdAt: toDate(h.createdAt) })
         const reviveGoal = (g: SavingsGoal) => ({ ...g, deadline: g.deadline ? toDate(g.deadline) : undefined, createdAt: toDate(g.createdAt) })
@@ -323,7 +323,7 @@ export const useStore = create<Store>()((set, get) => ({
       mergeCloud: (data) => {
         // cloud-only: merge = hydrate (akun jadi sumber tunggal)
         const reviveTx = (t: Transaction) => ({ ...t, date: toDate(t.date), createdAt: toDate(t.createdAt), updatedAt: toDate(t.updatedAt) })
-        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
+        const reviveBill = (b: Bill) => ({ ...b, dueDate: toDate(b.dueDate), lastPaidAt: b.lastPaidAt ? toDate(b.lastPaidAt) : undefined, createdAt: toDate(b.createdAt), updatedAt: toDate(b.updatedAt) })
         const reviveWallet = (w: Wallet) => ({ ...w, createdAt: toDate(w.createdAt), updatedAt: toDate(w.updatedAt) })
         const reviveHabit = (h: Habit) => ({ ...h, createdAt: toDate(h.createdAt) })
         const reviveGoal = (g: SavingsGoal) => ({ ...g, deadline: g.deadline ? toDate(g.deadline) : undefined, createdAt: toDate(g.createdAt) })
