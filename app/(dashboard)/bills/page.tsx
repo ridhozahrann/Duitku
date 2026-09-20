@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Bell, Calendar, CheckCircle, AlertCircle, Clock, Trash2 } from 'lucide-react'
+import { Plus, Bell, Calendar, CheckCircle, AlertCircle, Clock, Trash2, PauseCircle, PlayCircle, Edit3, CalendarIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,32 +17,161 @@ import { useStore } from '@/store/useStore'
 import { useToast } from '@/hooks/useToast'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { CalendarIcon } from 'lucide-react'
+import { Bill } from '@/types'
+
+function getNextDueDate(currentDate: Date, recurrence: 'weekly' | 'monthly' | 'yearly'): Date {
+  const d = new Date(currentDate)
+  if (recurrence === 'weekly') {
+    d.setDate(d.getDate() + 7)
+  } else if (recurrence === 'monthly') {
+    d.setMonth(d.getMonth() + 1)
+  } else if (recurrence === 'yearly') {
+    d.setFullYear(d.getFullYear() + 1)
+  }
+  return d
+}
 
 export default function BillsPage() {
-  const { bills, addBill, updateBill, deleteBill } = useStore()
+  const { bills, addBill, updateBill, deleteBill, addTransaction, wallets } = useStore()
   const { toast } = useToast()
+
   const [showAdd, setShowAdd] = useState(false)
+  const [editingBill, setEditingBill] = useState<Bill | null>(null)
+
+  // Form states
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('Tagihan')
   const [dueDate, setDueDate] = useState<Date>(new Date())
   const [recurrence, setRecurrence] = useState<string>('monthly')
 
-  const unpaid = bills.filter(b => b.status !== 'paid')
-  const overdue = bills.filter(b => b.status === 'overdue')
-  const upcoming = bills.filter(b => b.status === 'unpaid')
-  const totalDue = unpaid.reduce((s, b) => s + b.amount, 0)
-
-  // auto-mark overdue
   const isOverdue = (d: Date) => new Date(d).getTime() < Date.now() && new Date(d).toDateString() !== new Date().toDateString()
 
-  const handleAdd = () => {
+  const activeBills = bills.filter(b => b.status !== 'paid' && b.status !== 'paused')
+  const overdueBills = bills.filter(b => b.status === 'overdue' || (b.status === 'unpaid' && isOverdue(b.dueDate)))
+  const upcomingBills = bills.filter(b => b.status === 'unpaid' && !isOverdue(b.dueDate))
+  const pausedBills = bills.filter(b => b.status === 'paused')
+  const paidBills = bills.filter(b => b.status === 'paid')
+
+  const totalActiveDue = activeBills.reduce((s, b) => s + b.amount, 0)
+
+  const resetForm = () => {
+    setName('')
+    setAmount('')
+    setCategory('Tagihan')
+    setDueDate(new Date())
+    setRecurrence('monthly')
+    setEditingBill(null)
+  }
+
+  const openAddDialog = () => {
+    resetForm()
+    setShowAdd(true)
+  }
+
+  const openEditDialog = (bill: Bill) => {
+    setEditingBill(bill)
+    setName(bill.name)
+    setAmount(String(bill.amount))
+    setCategory(bill.category || 'Tagihan')
+    setDueDate(new Date(bill.dueDate))
+    setRecurrence(bill.recurrence || 'monthly')
+    setShowAdd(true)
+  }
+
+  const handleSave = () => {
     const amt = parseThousands(amount)
-    if (!name.trim() || !amt) { toast({ title: 'Gagal', description: 'Nama & nominal wajib diisi', variant: 'destructive' }); return }
-    addBill({ name: name.trim(), amount: amt, category, dueDate, recurrence: recurrence as any, status: isOverdue(dueDate) ? 'overdue' : 'unpaid', notes: '' })
-    toast({ title: 'Berhasil', description: `Tagihan "${name}" ditambah`, variant: 'success' })
-    setName(''); setAmount(''); setShowAdd(false)
+    if (!name.trim() || !amt || amt <= 0) {
+      toast({ title: 'Gagal', description: 'Nama & nominal wajib diisi dengan benar', variant: 'destructive' })
+      return
+    }
+
+    const rec = recurrence === 'none' ? undefined : (recurrence as 'once' | 'weekly' | 'monthly' | 'yearly')
+    const calculatedStatus = isOverdue(dueDate) ? 'overdue' : 'unpaid'
+
+    if (editingBill) {
+      updateBill(editingBill.id, {
+        name: name.trim(),
+        amount: amt,
+        category,
+        dueDate,
+        recurrence: rec,
+        status: editingBill.status === 'paused' ? 'paused' : calculatedStatus,
+      })
+      toast({ title: 'Berhasil', description: `Tagihan "${name}" diperbarui`, variant: 'success' })
+    } else {
+      addBill({
+        name: name.trim(),
+        amount: amt,
+        category,
+        dueDate,
+        recurrence: rec,
+        status: calculatedStatus,
+        notes: '',
+      })
+      toast({ title: 'Berhasil', description: `Tagihan "${name}" ditambahkan`, variant: 'success' })
+    }
+
+    resetForm()
+    setShowAdd(false)
+  }
+
+  const handleMarkPaid = (bill: Bill) => {
+    const defaultWalletId = wallets[0]?.id
+
+    // Catat transaksi pengeluaran otomatis
+    addTransaction({
+      type: 'expense',
+      amount: bill.amount,
+      categoryId: 'bills',
+      walletId: defaultWalletId,
+      description: `Bayar tagihan: ${bill.name}`,
+      date: new Date(),
+    })
+
+    if (bill.recurrence && bill.recurrence !== 'once') {
+      const nextDate = getNextDueDate(new Date(bill.dueDate), bill.recurrence)
+      const nextStatus = isOverdue(nextDate) ? 'overdue' : 'unpaid'
+
+      updateBill(bill.id, {
+        dueDate: nextDate,
+        status: nextStatus,
+      })
+
+      toast({
+        title: 'Lunas & Transaksi Dicatat! 🎉',
+        description: `Pembayaran ${bill.name} berhasil. Jatuh tempo berikutnya: ${formatDate(nextDate)}`,
+        variant: 'success',
+      })
+    } else {
+      updateBill(bill.id, { status: 'paid' })
+      toast({
+        title: 'Lunas & Transaksi Dicatat! 🎉',
+        description: `Tagihan ${bill.name} ditandai lunas`,
+        variant: 'success',
+      })
+    }
+  }
+
+  const handleTogglePause = (bill: Bill) => {
+    if (bill.status === 'paused') {
+      const newStatus = isOverdue(new Date(bill.dueDate)) ? 'overdue' : 'unpaid'
+      updateBill(bill.id, { status: newStatus })
+      toast({ title: 'Tagihan Diaktifkan ▶️', description: `${bill.name} aktif kembali.`, variant: 'success' })
+    } else {
+      updateBill(bill.id, { status: 'paused' })
+      toast({ title: 'Tagihan Di-pause ⏸️', description: `${bill.name} di-pause (libur semester).`, variant: 'default' })
+    }
+  }
+
+  const getRecurrenceLabel = (rec?: string) => {
+    switch (rec) {
+      case 'weekly': return 'Mingguan'
+      case 'monthly': return 'Bulanan'
+      case 'yearly': return 'Tahunan'
+      case 'once': return 'Sekali Bayar'
+      default: return 'Sekali Bayar'
+    }
   }
 
   return (
@@ -50,91 +179,241 @@ export default function BillsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Pengingat Tagihan</h1>
-          <p className="text-gray-600 dark:text-zinc-400">{unpaid.length} belum dibayar • Total: {formatIDR(totalDue)}</p>
+          <p className="text-gray-600 dark:text-zinc-400">
+            {activeBills.length} tagihan aktif • Total: {formatIDR(totalActiveDue)}
+          </p>
         </div>
-        <Button onClick={() => setShowAdd(true)}><Plus className="mr-2 h-4 w-4" />Tambah Tagihan</Button>
+        <Button onClick={openAddDialog}>
+          <Plus className="mr-2 h-4 w-4" />Tambah Tagihan
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className={overdue.length ? 'border-red-200 bg-red-50 dark:bg-red-950/20' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Terlambat</CardTitle><AlertCircle className={`h-4 w-4 ${overdue.length ? 'text-red-600' : 'text-gray-400'}`} /></CardHeader>
-          <CardContent><div className={`text-2xl font-bold ${overdue.length ? 'text-red-600' : ''}`}>{overdue.length}</div><p className="text-sm text-gray-500 mt-1">Perlu segera dibayar</p></CardContent>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className={overdueBills.length ? 'border-red-200 bg-red-50 dark:bg-red-950/20' : ''}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Terlambat</CardTitle>
+            <AlertCircle className={`h-4 w-4 ${overdueBills.length ? 'text-red-600' : 'text-gray-400'}`} />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${overdueBills.length ? 'text-red-600' : ''}`}>{overdueBills.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Perlu segera dibayar</p>
+          </CardContent>
         </Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Mendatang</CardTitle><Clock className="h-4 w-4 text-blue-600" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-blue-600">{upcoming.length}</div><p className="text-sm text-gray-500 mt-1">Akan jatuh tempo</p></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Tagihan</CardTitle><Bell className="h-4 w-4 text-primary-600" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-primary-600">{formatIDR(totalDue)}</div><p className="text-sm text-gray-500 mt-1">Belum dibayar</p></CardContent></Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mendatang</CardTitle>
+            <Clock className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{upcomingBills.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Akan jatuh tempo</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Di-pause (Libur)</CardTitle>
+            <PauseCircle className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{pausedBills.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Diberhentikan sementara</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Tagihan Aktif</CardTitle>
+            <Bell className="h-4 w-4 text-primary-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary-600">{formatIDR(totalActiveDue)}</div>
+            <p className="text-xs text-gray-500 mt-1">Belum dibayar</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {unpaid.length ? (
-        <div className="space-y-4">
-          {unpaid.map(bill => {
-            const overdueFlag = bill.status === 'overdue'
-            const days = Math.floor((new Date(bill.dueDate).getTime() - Date.now()) / 86400000)
-            return (
-              <Card key={bill.id} className={overdueFlag ? 'border-red-200' : ''}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <h3 className="font-medium">{bill.name}</h3>
-                        <Badge variant={overdueFlag ? 'destructive' : 'outline'}>{overdueFlag ? 'Terlambat' : 'Belum Dibayar'}</Badge>
-                        {bill.recurrence && <Badge variant="secondary" className="text-xs">{bill.recurrence === 'monthly' ? 'Bulanan' : bill.recurrence === 'weekly' ? 'Mingguan' : 'Tahunan'}</Badge>}
+      {/* Tagihan Aktif */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Tagihan Aktif ({activeBills.length})</h2>
+        {activeBills.length ? (
+          <div className="space-y-4">
+            {activeBills.map(bill => {
+              const overdueFlag = bill.status === 'overdue' || isOverdue(new Date(bill.dueDate))
+              const days = Math.ceil((new Date(bill.dueDate).getTime() - Date.now()) / 86400000)
+
+              return (
+                <Card key={bill.id} className={overdueFlag ? 'border-red-300 bg-red-50/50 dark:bg-red-950/10' : ''}>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-lg">{bill.name}</h3>
+                          <Badge variant={overdueFlag ? 'destructive' : 'outline'}>
+                            {overdueFlag ? 'Terlambat' : 'Belum Dibayar'}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {getRecurrenceLabel(bill.recurrence)}
+                          </Badge>
+                        </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-zinc-100">
+                          {formatIDR(bill.amount)}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-zinc-400 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" /> Jatuh Tempo: {formatDate(new Date(bill.dueDate))}
+                          </span>
+                          <span className={overdueFlag ? 'text-red-600 font-semibold' : 'text-blue-600 font-medium'}>
+                            {overdueFlag ? 'Lewat jatuh tempo' : days > 0 ? `${days} hari lagi` : days === 0 ? 'Hari ini!' : 'Terlambat'}
+                          </span>
+                          <span className="text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded">{bill.category}</span>
+                        </div>
+                        {bill.recurrence && bill.recurrence !== 'once' && (
+                          <div className="text-xs text-gray-500 dark:text-zinc-400 italic">
+                            🔄 Berulang tiap {bill.recurrence === 'monthly' ? 'bulan (tgl ' + new Date(bill.dueDate).getDate() + ')' : bill.recurrence === 'weekly' ? 'minggu' : 'tahun'}. Saat lunas, otomatis dijadwalkan untuk periode berikutnya.
+                          </div>
+                        )}
                       </div>
-                      <div className="text-2xl font-bold mb-1">{formatIDR(bill.amount)}</div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-zinc-400">
-                        <span className="flex items-center gap-1"><Calendar className="h-4 w-4" />{formatDate(new Date(bill.dueDate))}</span>
-                        <span className={overdueFlag ? 'text-red-600' : ''}>{overdueFlag ? 'Sudah lewat' : days > 0 ? `${days} hari lagi` : days === 0 ? 'Hari ini' : 'Terlambat'}</span>
-                        <span className="text-xs">{bill.category}</span>
+
+                      <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
+                        <Button size="sm" onClick={() => handleMarkPaid(bill)} className="flex-1 sm:flex-initial">
+                          <CheckCircle className="mr-2 h-4 w-4" />Lunas
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleTogglePause(bill)} className="flex-1 sm:flex-initial text-amber-600 hover:text-amber-700">
+                          <PauseCircle className="mr-2 h-4 w-4" />Jeda (Libur)
+                        </Button>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => openEditDialog(bill)}>
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Hapus tagihan "${bill.name}"?`)) deleteBill(bill.id) }} className="text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" onClick={() => { updateBill(bill.id, { status: 'paid' }); toast({ title: 'Lunas', description: `${bill.name} ditandai lunas`, variant: 'success' }) }}><CheckCircle className="mr-2 h-4 w-4" />Lunas</Button>
-                      <Button size="sm" variant="outline" onClick={() => { if (confirm('Hapus tagihan?')) deleteBill(bill.id) }}><Trash2 className="mr-2 h-4 w-4" />Hapus</Button>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        ) : (
+          <Card><CardContent className="pt-6 text-center py-8 text-gray-500">Tidak ada tagihan aktif yang perlu dibayar.</CardContent></Card>
+        )}
+      </div>
+
+      {/* Tagihan Di-pause (Libur Semester) */}
+      {pausedBills.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2">
+            <PauseCircle className="h-5 w-5" /> Di-pause / Libur Semester ({pausedBills.length})
+          </h2>
+          <div className="space-y-3">
+            {pausedBills.map(bill => (
+              <Card key={bill.id} className="border-amber-200 bg-amber-50/40 dark:bg-amber-950/10">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900 dark:text-zinc-100">{bill.name}</h4>
+                        <Badge variant="outline" className="text-amber-700 border-amber-300">⏸️ Di-pause</Badge>
+                        <Badge variant="secondary" className="text-xs">{getRecurrenceLabel(bill.recurrence)}</Badge>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-0.5">{formatIDR(bill.amount)} • Terakhir jatuh tempo: {formatDate(new Date(bill.dueDate))}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleTogglePause(bill)} className="text-green-600 border-green-200 hover:bg-green-50">
+                        <PlayCircle className="mr-1 h-4 w-4" />Aktifkan
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { if (confirm('Hapus tagihan ini?')) deleteBill(bill.id) }} className="text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            )
-          })}
+            ))}
+          </div>
         </div>
-      ) : (
-        <Card><CardContent className="pt-6"><div className="text-center py-12">
-          <div className="h-12 w-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle className="h-6 w-6" /></div>
-          <h3 className="text-lg font-medium mb-2">Semua tagihan lunas</h3><p className="text-gray-500 mb-6">Tidak ada tagihan belum dibayar</p>
-          <Button onClick={() => setShowAdd(true)}>+ Tambah Tagihan Baru</Button>
-        </div></CardContent></Card>
       )}
 
-      {/* history paid */}
-      {bills.filter(b => b.status === 'paid').length > 0 && (
-        <Card><CardHeader><CardTitle>Riwayat Lunas ({bills.filter(b => b.status === 'paid').length})</CardTitle></CardHeader>
+      {/* Riwayat Lunas */}
+      {paidBills.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base font-semibold">Riwayat Lunas ({paidBills.length})</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {bills.filter(b => b.status === 'paid').map(b => (
-              <div key={b.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0">
-                <span>{b.name} • {formatIDR(b.amount)}</span>
-                <Button size="sm" variant="ghost" onClick={() => updateBill(b.id, { status: 'unpaid' })}>Batal lunas</Button>
+            {paidBills.map(b => (
+              <div key={b.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0 dark:border-zinc-800">
+                <div>
+                  <span className="font-medium">{b.name}</span> • <span className="text-gray-500">{formatIDR(b.amount)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => updateBill(b.id, { status: 'unpaid' })} className="text-xs">
+                    Batal lunas
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => deleteBill(b.id)} className="text-xs text-red-600">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             ))}
-          </CardContent></Card>
+          </CardContent>
+        </Card>
       )}
 
-      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+      {/* Dialog Add / Edit */}
+      <Dialog open={showAdd} onOpenChange={(open) => { setShowAdd(open); if (!open) resetForm() }}>
         <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader><DialogTitle>Tambah Tagihan</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editingBill ? 'Edit Tagihan' : 'Tambah Tagihan'}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2"><Label>Nama</Label><Input placeholder="Internet Kos" value={name} onChange={e => setName(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Nominal (Rp)</Label><CurrencyInput placeholder="0" value={amount} onValueChange={setAmount} /></div>
-            <div className="space-y-2"><Label>Kategori</Label><Input placeholder="Tagihan" value={category} onChange={e => setCategory(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Periode</Label>
-              <Select value={recurrence} onValueChange={setRecurrence}><SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="weekly">Mingguan</SelectItem><SelectItem value="monthly">Bulanan</SelectItem><SelectItem value="yearly">Tahunan</SelectItem></SelectContent></Select>
+            <div className="space-y-2">
+              <Label>Nama Tagihan</Label>
+              <Input placeholder="Misal: WiFi Kos / Listrik" value={name} onChange={e => setName(e.target.value)} />
             </div>
-            <div className="space-y-2"><Label>Jatuh tempo</Label>
-              <Popover><PopoverTrigger asChild><Button variant="outline" className="w-full justify-start font-normal"><CalendarIcon className="mr-2 h-4 w-4" />{format(dueDate, 'PPP', { locale: id })}</Button></PopoverTrigger>
-                <PopoverContent className="w-auto p-0"><CalendarComponent mode="single" selected={dueDate} onSelect={d => d && setDueDate(d)} /></PopoverContent></Popover>
+
+            <div className="space-y-2">
+              <Label>Nominal (Rp)</Label>
+              <CurrencyInput placeholder="150.000" value={amount} onValueChange={setAmount} />
             </div>
-            <Button className="w-full" onClick={handleAdd}>Simpan</Button>
+
+            <div className="space-y-2">
+              <Label>Kategori</Label>
+              <Input placeholder="Tagihan" value={category} onChange={e => setCategory(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Periode Berulang</Label>
+              <Select value={recurrence} onValueChange={setRecurrence}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">Bulanan (Tiap Bulan)</SelectItem>
+                  <SelectItem value="weekly">Mingguan (Tiap Minggu)</SelectItem>
+                  <SelectItem value="yearly">Tahunan (Tiap Tahun)</SelectItem>
+                  <SelectItem value="none">Sekali Bayar (Tidak Berulang)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Jatuh Tempo Pembayaran</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />{format(dueDate, 'PPP', { locale: id })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent mode="single" selected={dueDate} onSelect={d => d && setDueDate(d)} />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button className="w-full" onClick={handleSave}>
+              {editingBill ? 'Simpan Perubahan' : 'Simpan Tagihan'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

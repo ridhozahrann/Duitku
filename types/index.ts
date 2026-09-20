@@ -38,8 +38,8 @@ export interface Bill {
   amount: number
   category: string
   dueDate: Date
-  recurrence?: 'weekly' | 'monthly' | 'yearly'
-  status: 'paid' | 'unpaid' | 'overdue'
+  recurrence?: 'once' | 'weekly' | 'monthly' | 'yearly'
+  status: 'paid' | 'unpaid' | 'overdue' | 'paused'
   notes?: string
   createdAt: Date
   updatedAt: Date

@@ -52,8 +52,8 @@ create table if not exists bills (
   amount numeric not null check (amount > 0),
   category text not null,
   due_date timestamptz not null,
-  recurrence text check (recurrence in ('weekly','monthly','yearly')),
-  status text not null check (status in ('paid','unpaid','overdue')) default 'unpaid',
+  recurrence text check (recurrence in ('once','weekly','monthly','yearly')),
+  status text not null check (status in ('paid','unpaid','overdue','paused')) default 'unpaid',
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
