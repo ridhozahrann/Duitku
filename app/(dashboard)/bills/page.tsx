@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Bell, Calendar, CheckCircle, AlertCircle, Clock, Trash2, PauseCircle, PlayCircle, Edit3, CalendarIcon } from 'lucide-react'
+import { Plus, Bell, Calendar, CheckCircle, AlertCircle, Clock, Trash2, PauseCircle, PlayCircle, Edit3, CalendarIcon, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +31,18 @@ function getNextDueDate(currentDate: Date, recurrence: 'weekly' | 'monthly' | 'y
   return d
 }
 
+function getPrevDueDate(currentDate: Date, recurrence: 'weekly' | 'monthly' | 'yearly'): Date {
+  const d = new Date(currentDate)
+  if (recurrence === 'weekly') {
+    d.setDate(d.getDate() - 7)
+  } else if (recurrence === 'monthly') {
+    d.setMonth(d.getMonth() - 1)
+  } else if (recurrence === 'yearly') {
+    d.setFullYear(d.getFullYear() - 1)
+  }
+  return d
+}
+
 export default function BillsPage() {
   const { bills, addBill, updateBill, deleteBill, addTransaction, wallets } = useStore()
   const { toast } = useToast()
@@ -45,15 +57,42 @@ export default function BillsPage() {
   const [dueDate, setDueDate] = useState<Date>(new Date())
   const [recurrence, setRecurrence] = useState<string>('monthly')
 
-  const isOverdue = (d: Date) => new Date(d).getTime() < Date.now() && new Date(d).toDateString() !== new Date().toDateString()
+  const isOverdue = (d: Date) => {
+    const target = new Date(d)
+    const today = new Date()
+    target.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    return target.getTime() < today.getTime()
+  }
 
-  const activeBills = bills.filter(b => b.status !== 'paid' && b.status !== 'paused')
-  const overdueBills = bills.filter(b => b.status === 'overdue' || (b.status === 'unpaid' && isOverdue(b.dueDate)))
-  const upcomingBills = bills.filter(b => b.status === 'unpaid' && !isOverdue(b.dueDate))
+  // Tagihan yang di-pause
   const pausedBills = bills.filter(b => b.status === 'paused')
-  const paidBills = bills.filter(b => b.status === 'paid')
 
-  const totalActiveDue = activeBills.reduce((s, b) => s + b.amount, 0)
+  // Tagihan sekali bayar yang sudah lunas
+  const paidOnceBills = bills.filter(b => b.status === 'paid')
+
+  // Tagihan berulang yang tanggal jatuh temponya masih di MASA DEPAN (berarti siklus bulan ini sudah lunas)
+  const paidThisCycleBills = bills.filter(b => {
+    if (b.status === 'paused' || b.status === 'paid') return false
+    if (!b.recurrence || b.recurrence === 'once') return false
+    const d = new Date(b.dueDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return d.getTime() > today.getTime()
+  })
+
+  // Tagihan yang perlu dibayar sekarang (jatuh tempo hari ini atau sudah lewat)
+  const dueBills = bills.filter(b => {
+    if (b.status === 'paused' || b.status === 'paid') return false
+    if (!b.recurrence || b.recurrence === 'once') return true
+    const d = new Date(b.dueDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return d.getTime() <= today.getTime()
+  })
+
+  const overdueBills = dueBills.filter(b => isOverdue(b.dueDate))
+  const totalActiveDue = dueBills.reduce((s, b) => s + b.amount, 0)
 
   const resetForm = () => {
     setName('')
@@ -119,7 +158,7 @@ export default function BillsPage() {
   const handleMarkPaid = (bill: Bill) => {
     const defaultWalletId = wallets[0]?.id
 
-    // Catat transaksi pengeluaran otomatis
+    // Catat transaksi pengeluaran otomatis di store
     addTransaction({
       type: 'expense',
       amount: bill.amount,
@@ -131,25 +170,38 @@ export default function BillsPage() {
 
     if (bill.recurrence && bill.recurrence !== 'once') {
       const nextDate = getNextDueDate(new Date(bill.dueDate), bill.recurrence)
-      const nextStatus = isOverdue(nextDate) ? 'overdue' : 'unpaid'
 
       updateBill(bill.id, {
         dueDate: nextDate,
-        status: nextStatus,
+        status: 'unpaid',
       })
 
       toast({
-        title: 'Lunas & Transaksi Dicatat! 🎉',
-        description: `Pembayaran ${bill.name} berhasil. Jatuh tempo berikutnya: ${formatDate(nextDate)}`,
+        title: 'Lunas & Dicatat ke Transaksi! 🎉',
+        description: `${bill.name} lunas bulan ini. Pembayaran selanjutnya: ${formatDate(nextDate)}`,
         variant: 'success',
       })
     } else {
       updateBill(bill.id, { status: 'paid' })
       toast({
-        title: 'Lunas & Transaksi Dicatat! 🎉',
+        title: 'Lunas & Dicatat ke Transaksi! 🎉',
         description: `Tagihan ${bill.name} ditandai lunas`,
         variant: 'success',
       })
+    }
+  }
+
+  const handleUndoPaid = (bill: Bill) => {
+    if (bill.recurrence && bill.recurrence !== 'once') {
+      const prevDate = getPrevDueDate(new Date(bill.dueDate), bill.recurrence)
+      updateBill(bill.id, {
+        dueDate: prevDate,
+        status: isOverdue(prevDate) ? 'overdue' : 'unpaid',
+      })
+      toast({ title: 'Status Di-reset', description: `Tagihan ${bill.name} kembali ke jatuh tempo ${formatDate(prevDate)}` })
+    } else {
+      updateBill(bill.id, { status: 'unpaid' })
+      toast({ title: 'Batal Lunas', description: `Tagihan ${bill.name} kembali belum lunas` })
     }
   }
 
@@ -180,7 +232,7 @@ export default function BillsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Pengingat Tagihan</h1>
           <p className="text-gray-600 dark:text-zinc-400">
-            {activeBills.length} tagihan aktif • Total: {formatIDR(totalActiveDue)}
+            {dueBills.length} perlu dibayar • Total: {formatIDR(totalActiveDue)}
           </p>
         </div>
         <Button onClick={openAddDialog}>
@@ -191,23 +243,23 @@ export default function BillsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className={overdueBills.length ? 'border-red-200 bg-red-50 dark:bg-red-950/20' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Terlambat</CardTitle>
+            <CardTitle className="text-sm font-medium">Perlu Dibayar</CardTitle>
             <AlertCircle className={`h-4 w-4 ${overdueBills.length ? 'text-red-600' : 'text-gray-400'}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${overdueBills.length ? 'text-red-600' : ''}`}>{overdueBills.length}</div>
-            <p className="text-xs text-gray-500 mt-1">Perlu segera dibayar</p>
+            <div className={`text-2xl font-bold ${overdueBills.length ? 'text-red-600' : ''}`}>{dueBills.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Jatuh tempo / Terlambat</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mendatang</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Lunas Bulan Ini</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{upcomingBills.length}</div>
-            <p className="text-xs text-gray-500 mt-1">Akan jatuh tempo</p>
+            <div className="text-2xl font-bold text-green-600">{paidThisCycleBills.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Pembayaran berikutnya terjadwal</p>
           </CardContent>
         </Card>
 
@@ -224,23 +276,25 @@ export default function BillsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tagihan Aktif</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Perlu Dibayar</CardTitle>
             <Bell className="h-4 w-4 text-primary-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary-600">{formatIDR(totalActiveDue)}</div>
-            <p className="text-xs text-gray-500 mt-1">Belum dibayar</p>
+            <p className="text-xs text-gray-500 mt-1">Tagihan aktif</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tagihan Aktif */}
+      {/* 1. Tagihan Perlu Dibayar Sekarang */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Tagihan Aktif ({activeBills.length})</h2>
-        {activeBills.length ? (
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+          <Clock className="h-5 w-5 text-red-500" /> Perlu Dibayar Sekarang ({dueBills.length})
+        </h2>
+        {dueBills.length ? (
           <div className="space-y-4">
-            {activeBills.map(bill => {
-              const overdueFlag = bill.status === 'overdue' || isOverdue(new Date(bill.dueDate))
+            {dueBills.map(bill => {
+              const overdueFlag = isOverdue(new Date(bill.dueDate))
               const days = Math.ceil((new Date(bill.dueDate).getTime() - Date.now()) / 86400000)
 
               return (
@@ -261,24 +315,19 @@ export default function BillsPage() {
                           {formatIDR(bill.amount)}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-zinc-400 flex-wrap">
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 font-medium">
                             <Calendar className="h-4 w-4" /> Jatuh Tempo: {formatDate(new Date(bill.dueDate))}
                           </span>
                           <span className={overdueFlag ? 'text-red-600 font-semibold' : 'text-blue-600 font-medium'}>
-                            {overdueFlag ? 'Lewat jatuh tempo' : days > 0 ? `${days} hari lagi` : days === 0 ? 'Hari ini!' : 'Terlambat'}
+                            {overdueFlag ? 'Lewat tanggal jatuh tempo' : days > 0 ? `${days} hari lagi` : days === 0 ? 'Hari ini!' : 'Terlambat'}
                           </span>
                           <span className="text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded">{bill.category}</span>
                         </div>
-                        {bill.recurrence && bill.recurrence !== 'once' && (
-                          <div className="text-xs text-gray-500 dark:text-zinc-400 italic">
-                            🔄 Berulang tiap {bill.recurrence === 'monthly' ? 'bulan (tgl ' + new Date(bill.dueDate).getDate() + ')' : bill.recurrence === 'weekly' ? 'minggu' : 'tahun'}. Saat lunas, otomatis dijadwalkan untuk periode berikutnya.
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
-                        <Button size="sm" onClick={() => handleMarkPaid(bill)} className="flex-1 sm:flex-initial">
-                          <CheckCircle className="mr-2 h-4 w-4" />Lunas
+                        <Button size="sm" onClick={() => handleMarkPaid(bill)} className="flex-1 sm:flex-initial bg-green-600 hover:bg-green-700 text-white">
+                          <CheckCircle className="mr-2 h-4 w-4" />Bayar Bulan Ini
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => handleTogglePause(bill)} className="flex-1 sm:flex-initial text-amber-600 hover:text-amber-700">
                           <PauseCircle className="mr-2 h-4 w-4" />Jeda (Libur)
@@ -299,11 +348,68 @@ export default function BillsPage() {
             })}
           </div>
         ) : (
-          <Card><CardContent className="pt-6 text-center py-8 text-gray-500">Tidak ada tagihan aktif yang perlu dibayar.</CardContent></Card>
+          <Card><CardContent className="pt-6 text-center py-8 text-gray-500">🎉 Semua tagihan periode ini sudah lunas!</CardContent></Card>
         )}
       </div>
 
-      {/* Tagihan Di-pause (Libur Semester) */}
+      {/* 2. Lunas Bulan Ini & Jadwal Pembayaran Selanjutnya */}
+      {paidThisCycleBills.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" /> Lunas Bulan Ini & Pembayaran Selanjutnya ({paidThisCycleBills.length})
+          </h2>
+          <div className="space-y-3">
+            {paidThisCycleBills.map(bill => {
+              const nextDate = new Date(bill.dueDate)
+              const daysLeft = Math.ceil((nextDate.getTime() - Date.now()) / 86400000)
+
+              return (
+                <Card key={bill.id} className="border-green-200 bg-green-50/40 dark:bg-green-950/10">
+                  <CardContent className="pt-5 pb-5">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-base text-gray-900 dark:text-zinc-100">{bill.name}</h3>
+                          <Badge className="bg-green-600 text-white hover:bg-green-700">
+                            ✓ Lunas Bulan Ini
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {getRecurrenceLabel(bill.recurrence)}
+                          </Badge>
+                        </div>
+
+                        <div className="text-xl font-bold text-gray-900 dark:text-zinc-100">
+                          {formatIDR(bill.amount)}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-300 font-medium">
+                          <Calendar className="h-4 w-4 text-green-600" />
+                          <span>Pembayaran selanjutnya: <strong>{formatDate(nextDate)}</strong></span>
+                          <span className="text-xs text-gray-500 font-normal">({daysLeft} hari lagi • tiap tgl {nextDate.getDate()})</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button size="sm" variant="outline" onClick={() => handleTogglePause(bill)} className="text-amber-600 border-amber-200 hover:bg-amber-50 text-xs">
+                          <PauseCircle className="mr-1 h-3.5 w-3.5" />Jeda (Libur)
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleUndoPaid(bill)} className="text-xs text-gray-500 hover:text-gray-900">
+                          Batal lunas
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => openEditDialog(bill)} className="text-xs">
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Tagihan Di-pause (Libur Semester) */}
       {pausedBills.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2">
@@ -324,7 +430,7 @@ export default function BillsPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => handleTogglePause(bill)} className="text-green-600 border-green-200 hover:bg-green-50">
-                        <PlayCircle className="mr-1 h-4 w-4" />Aktifkan
+                        <PlayCircle className="mr-1 h-4 w-4" />Aktifkan Kembali
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => { if (confirm('Hapus tagihan ini?')) deleteBill(bill.id) }} className="text-red-600">
                         <Trash2 className="h-4 w-4" />
@@ -338,12 +444,12 @@ export default function BillsPage() {
         </div>
       )}
 
-      {/* Riwayat Lunas */}
-      {paidBills.length > 0 && (
+      {/* 4. Riwayat Tagihan Sekali Bayar yang Lunas */}
+      {paidOnceBills.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base font-semibold">Riwayat Lunas ({paidBills.length})</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base font-semibold">Riwayat Lunas ({paidOnceBills.length})</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {paidBills.map(b => (
+            {paidOnceBills.map(b => (
               <div key={b.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0 dark:border-zinc-800">
                 <div>
                   <span className="font-medium">{b.name}</span> • <span className="text-gray-500">{formatIDR(b.amount)}</span>
