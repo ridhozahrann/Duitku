@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut } from 'lucide-react'
+import { Download, Upload, Trash2, Database, FileJson, RefreshCw, User, LogOut, Layout, PanelLeft, PanelBottom } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { triggerCloudSync } from '@/hooks/useCloudSync'
 import { useAuth } from '@/components/AuthProvider'
 
 export default function SettingsPage() {
-  const { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, restoreData, clearAll } = useStore()
+  const { transactions, wallets, bills, habits, habitLogs, budgets, goals, categories, restoreData, clearAll, navPosition, setNavPosition } = useStore()
   const { user, signOut } = useAuth()
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -91,6 +91,46 @@ export default function SettingsPage() {
               <Link href="/login"><Button size="sm">Masuk</Button></Link>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Layout className="h-5 w-5" />Tampilan Navigasi</CardTitle>
+          <CardDescription>Pilih posisi menu navigasi aplikasi sesuai preferensi kamu</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            type="button"
+            onClick={() => setNavPosition('sidebar')}
+            className={`p-4 rounded-xl border-2 text-left flex items-start gap-3 transition-all ${
+              navPosition === 'sidebar'
+                ? 'border-primary-600 bg-primary-50/50 dark:bg-primary-950/20'
+                : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300'
+            }`}
+          >
+            <PanelLeft className={`h-6 w-6 mt-0.5 ${navPosition === 'sidebar' ? 'text-primary-600' : 'text-gray-400'}`} />
+            <div>
+              <div className="font-semibold text-sm text-gray-900 dark:text-zinc-100">Navigasi Samping (Sidebar)</div>
+              <div className="text-xs text-gray-500 mt-1">Menu di sebelah kiri (Desktop) dan bawah (Mobile)</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setNavPosition('bottom')}
+            className={`p-4 rounded-xl border-2 text-left flex items-start gap-3 transition-all ${
+              navPosition === 'bottom'
+                ? 'border-primary-600 bg-primary-50/50 dark:bg-primary-950/20'
+                : 'border-gray-200 dark:border-zinc-800 hover:border-gray-300'
+            }`}
+          >
+            <PanelBottom className={`h-6 w-6 mt-0.5 ${navPosition === 'bottom' ? 'text-primary-600' : 'text-gray-400'}`} />
+            <div>
+              <div className="font-semibold text-sm text-gray-900 dark:text-zinc-100">Navigasi Bawah (Bottom Bar)</div>
+              <div className="text-xs text-gray-500 mt-1">Menu di bawah layar untuk semua perangkat</div>
+            </div>
+          </button>
         </CardContent>
       </Card>
 

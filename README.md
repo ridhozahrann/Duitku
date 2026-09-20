@@ -44,8 +44,8 @@ Aplikasi pencatat keuangan harian mahasiswa Indonesia. Mendukung sinkronisasi cl
   - Export & import data backup dalam format `.json`.
   - Opsi memuat data demo untuk uji coba.
 
-- **Tampilan & PWA**
-  - Desain responsive (Sidebar untuk Desktop, Bottom Nav untuk Mobile).
+- **Tampilan & Preferensi Navigasi**
+  - Preferensi Posisi Navigasi: Opsi pilihan **Sidebar (Samping)** atau **Bottom Bar (Bawah)** di halaman Pengaturan.
   - Mode Gelap (Dark Mode) & Mode Terang (Light Mode).
   - Service Worker (PWA) untuk navigasi cepat.
 

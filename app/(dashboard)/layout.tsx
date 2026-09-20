@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import DesktopSidebar from '@/components/layout/DesktopSidebar'
 import { useStore } from '@/store/useStore'
@@ -11,18 +11,29 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isLoading, isSyncing } = useStore()
+  const { isLoading, isSyncing, navPosition, setNavPosition } = useStore()
   useCloudSync()
+
+  useEffect(() => {
+    const saved = localStorage.getItem('duitku_nav_position') as 'sidebar' | 'bottom' | null
+    if (saved && (saved === 'sidebar' || saved === 'bottom')) {
+      setNavPosition(saved)
+    }
+  }, [setNavPosition])
+
+  const isSidebar = navPosition === 'sidebar'
 
   return (
     <div className="h-full">
       {/* Desktop sidebar */}
-      <div className="hidden lg:block">
-        <DesktopSidebar />
-      </div>
+      {isSidebar && (
+        <div className="hidden lg:block">
+          <DesktopSidebar />
+        </div>
+      )}
 
       {/* Main content */}
-      <main className="lg:ml-64 h-full pb-20">
+      <main className={`${isSidebar ? 'lg:ml-64' : 'ml-0'} h-full pb-24 transition-all duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           {isSyncing && <div className="py-2 text-xs text-center text-gray-400">Menyinkronkan data...</div>}
           {isLoading ? (
@@ -35,8 +46,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
 
-      {/* Navigation: bottom bar selalu ada di semua lebar + sidebar di lg */}
-      <MobileBottomNav />
+      {/* Navigation: bottom bar */}
+      <div className={isSidebar ? 'lg:hidden' : 'block'}>
+        <MobileBottomNav />
+      </div>
     </div>
   )
 }

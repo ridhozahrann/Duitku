@@ -46,6 +46,8 @@ interface Store {
   getMonthlyExpense: () => number
   getTransactionsByDate: (date: Date) => Transaction[]
   getTransactionsByCategory: (categoryId: string) => Transaction[]
+  navPosition: 'sidebar' | 'bottom'
+  setNavPosition: (pos: 'sidebar' | 'bottom') => void
   isLoading: boolean
   isSyncing: boolean
   setLoading: (loading: boolean) => void
@@ -102,6 +104,13 @@ export const useStore = create<Store>()((set, get) => ({
       goals: [],
       isLoading: false,
       isSyncing: false,
+      navPosition: 'sidebar',
+      setNavPosition: (pos) => {
+        set({ navPosition: pos })
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('duitku_nav_position', pos)
+        }
+      },
 
       addTransaction: (transaction) => {
         const id = generateId()
