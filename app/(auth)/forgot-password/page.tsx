@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Lupa password</CardTitle><CardDescription>Masukkan email — kami kirim link reset</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Lupa password</CardTitle><CardDescription>Masukkan email untuk terima link reset</CardDescription></CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="kamu@kampus.ac.id" /></div>

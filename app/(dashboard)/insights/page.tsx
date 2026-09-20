@@ -62,10 +62,10 @@ export default function InsightsPage() {
 
     // recommendations
     const recs: string[] = []
-    if (trendPct > 15) recs.push(`Pengeluaran naik ${trendPct.toFixed(0)}% vs bulan lalu — cek kategori ${topCat?.name || 'terbesar'}.`)
-    if (overBudgets.length) recs.push(`${overBudgets.length} budget jebol: ${overBudgets.map(b => b.name).join(', ')}. Kurangi jajan / transport minggu ini.`)
+    if (trendPct > 15) recs.push(`Pengeluaran naik ${trendPct.toFixed(0)}% dibanding bulan lalu. Cek kategori ${topCat?.name || 'terbesar'}.`)
+    if (overBudgets.length) recs.push(`${overBudgets.length} budget jebol: ${overBudgets.map(b => b.name).join(', ')}. Evaluasi pengeluaran minggu ini.`)
     if (projected > monthlyIncome && monthlyIncome > 0) recs.push(`Proyeksi pengeluaran ${formatIDR(projected)} melebihi pemasukan bulan ini ${formatIDR(monthlyIncome)}. Potong 20% pengeluaran harian.`)
-    if (unpaid) recs.push(`${unpaid} tagihan belum lunas — lunasi yang jatuh tempo < 3 hari.`)
+    if (unpaid) recs.push(`${unpaid} tagihan belum lunas. Lunasi sebelum jatuh tempo.`)
     if (!recs.length) recs.push('Keuangan stabil. Pertahankan catat harian dan sisihkan 10% untuk target nabung.')
 
     return { monthlyIncome, monthlyExpense, avgDaily, projected, trendPct, prevExpense, biggest, topCat, overBudgets, unpaid, runway, balance, remaining, recs, goalsProgress }
@@ -75,7 +75,7 @@ export default function InsightsPage() {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Insights</h1>
-        <p className="text-gray-600 dark:text-zinc-400">Rangkuman otomatis dari data kamu — tanpa AI, rule lokal.</p>
+        <p className="text-gray-600 dark:text-zinc-400">Rangkuman analisis statistik dari data transaksi kamu.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -142,7 +142,7 @@ export default function InsightsPage() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5 text-yellow-500" />Rekomendasi</CardTitle><CardDescription>Rule sederhana — bukan nasihat finansial.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5 text-yellow-500" />Rekomendasi</CardTitle><CardDescription>Saran berbasis statistik lokal.</CardDescription></CardHeader>
         <CardContent className="space-y-2">
           {insights.recs.map((r, i) => (
             <div key={i} className="flex gap-2 text-sm p-3 bg-primary-50 dark:bg-zinc-800 rounded-lg"><span className="text-primary-600">•</span><span>{r}</span></div>

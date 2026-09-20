@@ -167,10 +167,10 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />Sinkronisasi</CardTitle><CardDescription>Data mengikuti akun — HP & PC otomatis sama. Login dengan akun yang sama untuk melihat data yang sama.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />Sinkronisasi</CardTitle><CardDescription>Data tersinkron otomatis antar HP & PC saat login dengan akun yang sama.</CardDescription></CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" onClick={async () => { await triggerCloudSync(); toast({ title: 'Sinkron selesai', description: 'Data terbaru dari akun dimuat', variant: 'success' }) }} disabled={isSyncing}><RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />{isSyncing ? 'Menyinkron...' : 'Sinkron sekarang'}</Button>
-          <p className="text-xs text-gray-500">Gagal sinkron? Pastikan sudah login dan koneksi internet aktif. Jika masih gagal, data tabel belum dibuat — jalankan file supabase/schema.sql di dashboard.</p>
+          <p className="text-xs text-gray-500">Gagal sinkron? Pastikan sudah login dan koneksi internet aktif. Jika masih gagal, jalankan query supabase/schema.sql di Dashboard Supabase.</p>
         </CardContent>
       </Card>
 

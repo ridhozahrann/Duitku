@@ -34,7 +34,7 @@ export default function RegisterPage() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Daftar</CardTitle><CardDescription>Buat akun Duit Mahasiswa — data hanya bisa diakses akun kamu</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Daftar</CardTitle><CardDescription>Buat akun Duit Mahasiswa (data tersimpan privat per akun)</CardDescription></CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="kamu@kampus.ac.id" /></div>

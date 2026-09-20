@@ -176,7 +176,7 @@ export default function TransactionDialog({ open, onOpenChange, transactionId, d
             <Label><Wallet className="inline h-4 w-4 mr-2" />Kantong Uang</Label>
             <Select value={watch('walletId')} onValueChange={(value) => setValue('walletId', value)}>
               <SelectTrigger><SelectValue placeholder="Pilih kantong" /></SelectTrigger>
-              <SelectContent>{wallets.map((w) => <SelectItem key={w.id} value={w.id}><span>{w.name} — {formatIDR(w.balance)}</span></SelectItem>)}</SelectContent>
+              <SelectContent>{wallets.map((w) => <SelectItem key={w.id} value={w.id}><span>{w.name} ({formatIDR(w.balance)})</span></SelectItem>)}</SelectContent>
             </Select>
           </div>
 

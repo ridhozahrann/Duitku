@@ -126,7 +126,7 @@ export default function WalletsPage() {
           <DialogHeader><DialogTitle>Transfer Antar Kantong</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label>Dari</Label>
-              <Select value={fromId} onValueChange={setFromId}><SelectTrigger><SelectValue placeholder="Pilih kantong asal" /></SelectTrigger><SelectContent>{wallets.map(w => <SelectItem key={w.id} value={w.id}>{w.name} — {formatIDR(w.balance)}</SelectItem>)}</SelectContent></Select>
+              <Select value={fromId} onValueChange={setFromId}><SelectTrigger><SelectValue placeholder="Pilih kantong asal" /></SelectTrigger><SelectContent>{wallets.map(w => <SelectItem key={w.id} value={w.id}>{w.name} ({formatIDR(w.balance)})</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Ke</Label>
               <Select value={toId} onValueChange={setToId}><SelectTrigger><SelectValue placeholder="Pilih kantong tujuan" /></SelectTrigger><SelectContent>{wallets.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent></Select>

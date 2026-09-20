@@ -35,7 +35,7 @@ export default function BudgetsPage() {
 
   return (
     <div className="py-6 space-y-6 max-w-3xl">
-      <div><h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Budget Bulanan</h1><p className="text-gray-600 dark:text-zinc-400">Batas pengeluaran per kategori — reset tiap bulan</p></div>
+      <div><h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Budget Bulanan</h1><p className="text-gray-600 dark:text-zinc-400">Batas pengeluaran per kategori (reset tiap bulan)</p></div>
 
       <Card>
         <CardHeader><CardTitle>Atur Budget</CardTitle><CardDescription>Pilih kategori + nominal batas</CardDescription></CardHeader>
@@ -69,7 +69,7 @@ export default function BudgetsPage() {
                     <div className={`h-full ${over?'bg-red-500':warn?'bg-amber-500':'bg-green-500'}`} style={{ width: `${Math.min(100,pct)}%` }} />
                   </div>
                   {over && <p className="text-xs text-red-600 mt-1">Melebihi budget {formatIDR(spent - b.limit)}</p>}
-                  {warn && <p className="text-xs text-amber-600 mt-1">Hampir habis — sisa {formatIDR(b.limit - spent)}</p>}
+                  {warn && <p className="text-xs text-amber-600 mt-1">Hampir habis: sisa {formatIDR(b.limit - spent)}</p>}
                 </CardContent>
               </Card>
             )
