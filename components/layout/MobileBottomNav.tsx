@@ -8,7 +8,7 @@ import TransactionDialog from '@/components/transactions/TransactionDialog'
 import { useAuth } from '@/components/AuthProvider'
 
 const mainItems = [
-  { name: 'Beranda', href: '/', icon: Home },
+  { name: 'Beranda', href: '/dashboard', icon: Home },
   { name: 'Transaksi', href: '/transactions', icon: List },
   { name: 'Grafik', href: '/analytics', icon: BarChart3 },
   { name: 'Kantong', href: '/wallets', icon: Wallet },
@@ -34,7 +34,7 @@ export default function MobileBottomNav() {
       <div className="fixed bottom-0 left-0 right-0 md:bottom-3 md:max-w-2xl md:mx-auto bg-white dark:bg-zinc-900 border-t md:border border-gray-200 dark:border-zinc-800 z-40 md:rounded-2xl md:shadow-xl transition-all">
         <div className="flex justify-between items-center px-2 py-2">
           {mainItems.map((item) => {
-            const isActive = pathname === item.href || (item.href === '/' && pathname === '/dashboard')
+            const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/')
             const Icon = item.icon
             return (
               <Link key={item.name} href={item.href} className={`flex flex-col items-center justify-center p-2 rounded-lg ${isActive ? 'text-primary-600' : 'text-gray-500'}`}>

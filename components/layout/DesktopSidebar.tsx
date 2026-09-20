@@ -24,7 +24,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAuth } from '@/components/AuthProvider'
 
 const navItems = [
-  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Transaksi', href: '/transactions', icon: List },
   { name: 'Kantong Uang', href: '/wallets', icon: Wallet },
   { name: 'Grafik', href: '/analytics', icon: BarChart3 },
@@ -87,7 +87,7 @@ export default function DesktopSidebar() {
         {/* Navigation */}
         <nav className="p-4 space-y-1 overflow-y-auto max-h-[60vh]">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href === '/' && pathname === '/dashboard')
+            const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/')
             const Icon = item.icon
             
             return (
